@@ -13,7 +13,8 @@ const SecurityBanner = () => {
               <span className="text-lg mr-3">🇺🇸</span>
             </div>
             <div className="text-sm text-gray-700">
-              A public commenting platform providing transparency for local governments.
+              <span className="hidden sm:inline">A public commenting platform providing transparency for local governments.</span>
+              <span className="sm:hidden text-xs">Public commenting platform for transparent government</span>
             </div>
           </div>
           
