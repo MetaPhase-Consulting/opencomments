@@ -109,7 +109,7 @@ const Hero = () => {
         {/* Commenting Information */}
         <div className="mt-12 max-w-3xl mx-auto">
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-            <div className="flex items-start gap-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <div className="flex-shrink-0">
                 <img 
                   src="/OpenComments.png" 
@@ -117,7 +117,7 @@ const Hero = () => {
                   className="w-20 h-20"
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 text-center sm:text-left">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   Submit Official Comments
                 </h3>

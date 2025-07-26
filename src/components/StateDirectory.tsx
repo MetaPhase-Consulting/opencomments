@@ -109,7 +109,7 @@ const StateDirectory = () => {
 
     return (
     <div
-      className="w-12 h-12 text-xs font-bold flex items-center justify-center cursor-pointer transition-colors duration-200 border"
+      className="w-12 h-12 sm:w-12 sm:h-12 w-8 h-8 text-xs font-bold flex items-center justify-center cursor-pointer transition-colors duration-200 border"
       style={{
         backgroundColor: colors.bg,
         color: colors.text,
