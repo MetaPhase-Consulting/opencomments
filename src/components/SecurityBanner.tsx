@@ -20,9 +20,9 @@ const SecurityBanner = () => {
           
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center text-sm text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+            className="flex items-center text-xs sm:text-sm text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
           >
-            Here's how you know it's secure
+            How you know it's secure
             <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
           </button>
         </div>
