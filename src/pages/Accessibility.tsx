@@ -14,7 +14,7 @@ const Accessibility = () => {
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
             <p className="text-sm text-gray-600 mb-0">
-              <strong>Last Updated:</strong> January 2025
+              <strong>Last Updated:</strong> July 26, 2025
             </p>
           </div>
 
