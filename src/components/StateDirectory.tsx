@@ -109,7 +109,7 @@ const StateDirectory = () => {
 
     return (
     <div
-      className="w-12 h-12 sm:w-12 sm:h-12 w-8 h-8 text-xs font-bold flex items-center justify-center cursor-pointer transition-colors duration-200 border"
+      className="w-8 h-8 sm:w-12 sm:h-12 text-xs sm:font-bold font-normal flex items-center justify-center cursor-pointer transition-colors duration-200 border"
       style={{
         backgroundColor: colors.bg,
         color: colors.text,
@@ -187,27 +187,27 @@ const StateDirectory = () => {
             {/* Row 1 - Alaska (far left) and Northeast */}
             <div className="flex gap-1 mb-1">
               <StateSquare code="AK" onClick={() => handleStateSelect('AK')} color={getStateColor('AK')} />
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
               <StateSquare code="ME" onClick={() => handleStateSelect('ME')} color={getStateColor('ME')} />
             </div>
             
             {/* Row 2 - Michigan sticking up and Northeast */}
             <div className="flex gap-1 mb-1">
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
               <StateSquare code="MI" onClick={() => handleStateSelect('MI')} color={getStateColor('MI')} />
-              <div className="w-12"></div>
+              <div className="w-8 sm:w-12"></div>
               <StateSquare code="VT" onClick={() => handleStateSelect('VT')} color={getStateColor('VT')} />
               <StateSquare code="NH" onClick={() => handleStateSelect('NH')} color={getStateColor('NH')} />
             </div>
@@ -256,7 +256,7 @@ const StateDirectory = () => {
             
             {/* Row 6 - Lower middle tier */}
             <div className="flex gap-1 mb-1">
-              <div className="w-12"></div>
+              <div className="w-8 sm:w-12"></div>
               <StateSquare code="AZ" onClick={() => handleStateSelect('AZ')} color={getStateColor('AZ')} />
               <StateSquare code="NM" onClick={() => handleStateSelect('NM')} color={getStateColor('NM')} />
               <StateSquare code="KS" onClick={() => handleStateSelect('KS')} color={getStateColor('KS')} />
@@ -269,8 +269,8 @@ const StateDirectory = () => {
             
             {/* Row 7 - Southern tier */}
             <div className="flex gap-1 mb-1">
-              <div className="w-12"></div>
-              <div className="w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
               <StateSquare code="OK" onClick={() => handleStateSelect('OK')} color={getStateColor('OK')} />
               <StateSquare code="LA" onClick={() => handleStateSelect('LA')} color={getStateColor('LA')} />
               <StateSquare code="MS" onClick={() => handleStateSelect('MS')} color={getStateColor('MS')} />
@@ -281,11 +281,11 @@ const StateDirectory = () => {
             {/* Row 8 - Bottom extensions (Hawaii, Texas, Florida sticking down) */}
             <div className="flex gap-1">
               <StateSquare code="HI" onClick={() => handleStateSelect('HI')} color={getStateColor('HI')} />
-              <div className="w-12"></div>
+              <div className="w-8 sm:w-12"></div>
               <StateSquare code="TX" onClick={() => handleStateSelect('TX')} color={getStateColor('TX')} />
-              <div className="w-12"></div>
-              <div className="w-12"></div>
-              <div className="w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
+              <div className="w-8 sm:w-12"></div>
               <StateSquare code="FL" onClick={() => handleStateSelect('FL')} color={getStateColor('FL')} />
             </div>
           </div>
