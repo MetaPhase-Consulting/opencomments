@@ -138,7 +138,7 @@ const Header = () => {
             </nav>
 
             {/* Right Navigation */}
-            <div className="flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-4">
               <a
                 href="/agency-login"
                 className="px-4 py-2 text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
@@ -166,7 +166,7 @@ const Header = () => {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center">
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 type="button"
@@ -233,18 +233,10 @@ const Header = () => {
               <div className="pt-4 border-t border-gray-200 space-y-2">
                 <a
                   href="/agency-login"
-                  className="block w-full px-4 py-2 text-center text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  className="block w-full px-4 py-2 text-center text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-red-600 hover:text-white"
                   style={{ 
                     color: '#D9253A', 
                     borderColor: '#D9253A'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#D9253A';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#D9253A';
                   }}
                 >
                   Agency Login
