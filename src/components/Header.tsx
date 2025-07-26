@@ -190,7 +190,7 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200 bg-blue-50">
+          <div className="md:hidden border-t border-gray-200 bg-blue-100">
             <div className="px-4 py-4 space-y-4">
               {/* Mobile Search */}
               <form onSubmit={handleSearch}>
@@ -237,6 +237,14 @@ const Header = () => {
                   style={{ 
                     color: '#D9253A', 
                     borderColor: '#D9253A'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#D9253A';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#D9253A';
                   }}
                 >
                   Agency Login
