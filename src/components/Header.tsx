@@ -190,7 +190,7 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200 bg-blue-100">
+          <div className="md:hidden border-t border-gray-200 bg-blue-100 z-50" style={{ backgroundColor: '#DBEAFE' }}>
             <div className="px-4 py-4 space-y-4">
               {/* Mobile Search */}
               <form onSubmit={handleSearch}>
