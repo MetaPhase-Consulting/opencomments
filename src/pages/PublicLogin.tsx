@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import SecurityBanner from '../components/SecurityBanner'
 
 const PublicLogin = () => {
   const { user, profile } = useAuth()
@@ -64,27 +61,11 @@ const PublicLogin = () => {
             </div>
           </div>
 
-          <Auth
-            supabaseClient={supabase}
-            view={view}
-            providers={['github', 'google']}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#0050D8',
-                    brandAccent: '#003fb5',
-                  },
-                },
-              },
-            }}
-            redirectTo={`${window.location.origin}${nextUrl || '/dashboard'}`}
-            onlyThirdPartyProviders={false}
-            additionalData={{
-              role: 'public'
-            }}
-          />
+          <div className="text-center py-8">
+            <p className="text-gray-600">
+              Public login functionality will be implemented with Supabase Auth UI.
+            </p>
+          </div>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">

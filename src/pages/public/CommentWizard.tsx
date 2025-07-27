@@ -884,7 +884,7 @@ const CommentWizard = () => {
                 <label className="flex items-start">
                   <input
                     type="checkbox"
-                    maxLength={docket?.max_comment_length || 4000}
+                    checked={formData.agreedToPublic}
                     onChange={(e) => updateFormData('agreedToPublic', e.target.checked)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
                     required

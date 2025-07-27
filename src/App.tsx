@@ -32,9 +32,6 @@ import Reports from './pages/agency/Reports';
 import Unauthorized from './pages/Unauthorized';
 import Contact from './pages/Contact';
 import DocketBrowse from './pages/public/DocketBrowse';
-import PublicDocketDetail from './pages/public/DocketDetail';
-import CommentWizard from './pages/public/CommentWizard';
-import ThankYou from './pages/public/ThankYou';
 
 function App() {
   return (
@@ -60,9 +57,6 @@ function App() {
             <Route path="/accessibility" element={<Accessibility />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/dockets" element={<DocketBrowse />} />
-            <Route path="/dockets/:slug" element={<PublicDocketDetail />} />
-            <Route path="/dockets/:slug/comment" element={<CommentWizard />} />
-            <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/login" element={<PublicLogin />} />
             <Route path="/agency-login" element={<AgencyLogin />} />
             <Route path="/unauthorized" element={<Unauthorized />} />

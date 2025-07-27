@@ -1,12 +1,12 @@
-import React from 'react';
-import Header from './Header';
-import Footer from './Footer';
-import SecurityBanner from './SecurityBanner';
+import React from 'react'
+import Header from './Header'
+import Footer from './Footer'
+import SecurityBanner from './SecurityBanner'
 
 interface PublicLayoutProps {
-  children: React.ReactNode;
-  title?: string;
-  description?: string;
+  children: React.ReactNode
+  title?: string
+  description?: string
 }
 
 const PublicLayout: React.FC<PublicLayoutProps> = ({ 
@@ -15,19 +15,19 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({
   description = "Public commenting platform for transparent government" 
 }) => {
   React.useEffect(() => {
-    document.title = title;
+    document.title = title
     
     // Update meta description
-    const metaDescription = document.querySelector('meta[name="description"]');
+    const metaDescription = document.querySelector('meta[name="description"]')
     if (metaDescription) {
-      metaDescription.setAttribute('content', description);
+      metaDescription.setAttribute('content', description)
     } else {
-      const meta = document.createElement('meta');
-      meta.name = 'description';
-      meta.content = description;
-      document.head.appendChild(meta);
+      const meta = document.createElement('meta')
+      meta.name = 'description'
+      meta.content = description
+      document.head.appendChild(meta)
     }
-  }, [title, description]);
+  }, [title, description])
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -38,7 +38,5 @@ const PublicLayout: React.FC<PublicLayoutProps> = ({
       </main>
       <Footer />
     </div>
-  );
-};
-
-export default PublicLayout;
+  )
+}

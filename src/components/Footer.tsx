@@ -1,5 +1,5 @@
-import React from 'react';
-import { Github, Linkedin } from 'lucide-react';
+import React from 'react'
+import { Github, Linkedin } from 'lucide-react'
 
 const Footer = () => {
   return (
@@ -224,7 +224,5 @@ const Footer = () => {
         </div>
       </footer>
     </>
-  );
-};
-
-export default Footer;
+  )
+}
