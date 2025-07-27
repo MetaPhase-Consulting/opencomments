@@ -17,40 +17,51 @@ export type DocketStatus = 'draft' | 'open' | 'closed' | 'archived'
 export type CommentStatus = 'pending' | 'approved' | 'rejected' | 'flagged'
 export type ModerationAction = 'approve' | 'reject' | 'flag' | 'unflag' | 'edit' | 'delete'
 
+// Audit interfaces
+export interface AuditRecord {
+  id: string
+  record_id: string
+  action: 'INSERT' | 'UPDATE' | 'DELETE'
+  actor_id?: string
+  old_data?: any
+  new_data?: any
+  changed_fields?: any
+  action_timestamp: string
+  created_at: string
+}
+
+export interface DocketAudit extends AuditRecord {}
+export interface CommentAudit extends AuditRecord {}
+export interface AgencyMemberAudit extends AuditRecord {}
+export interface ProfileAudit extends AuditRecord {}
+
 // Core agency interfaces matching database schema
 export interface Agency {
   id: string
-  slug: string
   name: string
   jurisdiction?: string
+  description?: string
   logo_url?: string
+  settings?: any
   created_at: string
   updated_at: string
+  created_by?: string
+  updated_by?: string
+  deleted_at?: string
 }
 
-export interface AgencyUser {
+export interface AgencyMember {
   id: string
   agency_id: string
   user_id: string
   role: AgencyRole
+  invited_by?: string
   joined_at: string
   created_at: string
   updated_at: string
-}
-
-export interface Tag {
-  id: string
-  name: string
-  description?: string
-  color: string
-  created_at: string
-}
-
-export interface DocketTag {
-  id: string
-  docket_id: string
-  tag_id: string
-  created_at: string
+  created_by?: string
+  updated_by?: string
+  deleted_at?: string
 }
 
 export interface Docket {
@@ -60,34 +71,60 @@ export interface Docket {
   description: string
   summary?: string
   slug?: string
+  reference_code?: string
+  tags?: string[]
   status: DocketStatus
+  comment_deadline: string
   open_at?: string
   close_at?: string
+  settings?: any
+  auto_publish?: boolean
+  require_captcha?: boolean
+  max_file_size_mb?: number
+  allowed_file_types?: string[]
   created_by?: string
   created_at: string
   updated_at: string
+  updated_by?: string
+  deleted_at?: string
 }
 
 export interface Comment {
   id: string
   docket_id: string
   user_id: string
-  submitter_name?: string
-  submitter_email?: string
+  commenter_name?: string
+  commenter_email?: string
+  commenter_organization?: string
   content: string
-  body?: string
   status: CommentStatus
+  ip_address?: string
+  user_agent?: string
   created_at: string
   updated_at: string
+  created_by?: string
+  updated_by?: string
+  deleted_at?: string
 }
 
-export interface Attachment {
+export interface CommentAttachment {
   id: string
   comment_id: string
+  filename: string
   file_url: string
   mime_type: string
-  file_size: bigint
-  text_extracted?: string
+  file_size: number
+  created_at: string
+}
+
+export interface DocketAttachment {
+  id: string
+  docket_id: string
+  filename: string
+  file_url: string
+  file_size: number
+  mime_type: string
+  uploaded_by: string
   created_at: string
 }
 
@@ -96,20 +133,29 @@ export interface ModerationLog {
   comment_id: string
   action: ModerationAction
   actor_id: string
-  timestamp: string
+  previous_status?: CommentStatus
+  new_status?: CommentStatus
   reason?: string
+  notes?: string
   notes?: string
   created_at: string
 }
 
-export interface AgencySettings {
-  agency_id: string
-  max_file_size_mb: number
-  allowed_mime_types: string[]
-  captcha_enabled: boolean
-  auto_publish: boolean
+export interface SavedDocket {
+  id: string
+  user_id: string
+  docket_id: string
+  saved_at: string
+}
+
+export interface AllowedFileType {
+  id: string
+  extension: string
+  mime_type: string
+  description: string
+  max_size_mb?: number
+  is_active: boolean
   created_at: string
-  updated_at: string
 }
 
 export interface UserProfile {
@@ -120,4 +166,7 @@ export interface UserProfile {
   agency_name?: string
   created_at: string
   updated_at: string
+  created_by?: string
+  updated_by?: string
+  deleted_at?: string
 }
