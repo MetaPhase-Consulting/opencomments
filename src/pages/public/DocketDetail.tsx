@@ -1,0 +1,617 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
+import PublicLayout from '../../components/PublicLayout';
+import { 
+  Calendar, 
+  MessageSquare, 
+  Clock, 
+  FileText,
+  Download,
+  Share2,
+  ChevronLeft,
+  ExternalLink,
+  AlertCircle,
+  CheckCircle,
+  User,
+  Building2
+} from 'lucide-react';
+
+interface DocketData {
+  id: string;
+  title: string;
+  description: string;
+  summary?: string;
+  slug: string;
+  status: string;
+  open_at: string;
+  close_at?: string;
+  tags: string[];
+  agency_name: string;
+  agency_jurisdiction?: string;
+  comment_count: number;
+  auto_publish: boolean;
+  require_captcha: boolean;
+  max_file_size_mb: number;
+  allowed_file_types: string[];
+}
+
+interface DocketAttachment {
+  id: string;
+  filename: string;
+  file_url: string;
+  file_size: number;
+  mime_type: string;
+}
+
+interface PublicComment {
+  id: string;
+  commenter_name?: string;
+  commenter_organization?: string;
+  content: string;
+  created_at: string;
+  attachment_count: number;
+}
+
+const DocketDetail = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [docket, setDocket] = useState<DocketData | null>(null);
+  const [attachments, setAttachments] = useState<DocketAttachment[]>([]);
+  const [comments, setComments] = useState<PublicComment[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'comments'>('overview');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [commentsPage, setCommentsPage] = useState(1);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [hasMoreComments, setHasMoreComments] = useState(true);
+
+  useEffect(() => {
+    if (slug) {
+      fetchDocketData();
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    if (activeTab === 'comments' && comments.length === 0) {
+      fetchComments(1);
+    }
+  }, [activeTab]);
+
+  const fetchDocketData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch docket details
+      const { data: docketData, error: docketError } = await supabase
+        .from('dockets')
+        .select(`
+          id,
+          title,
+          description,
+          summary,
+          slug,
+          status,
+          open_at,
+          close_at,
+          tags,
+          auto_publish,
+          require_captcha,
+          max_file_size_mb,
+          allowed_file_types,
+          agencies!inner (
+            name,
+            jurisdiction
+          )
+        `)
+        .eq('slug', slug)
+        .neq('status', 'draft')
+        .single();
+
+      if (docketError || !docketData) {
+        setError('Docket not found');
+        return;
+      }
+
+      // Get comment count
+      const { count: commentCount } = await supabase
+        .from('public_comment_submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('docket_id', docketData.id)
+        .eq('status', 'approved');
+
+      setDocket({
+        ...docketData,
+        agency_name: docketData.agencies.name,
+        agency_jurisdiction: docketData.agencies.jurisdiction,
+        comment_count: commentCount || 0
+      });
+
+      // Fetch attachments
+      const { data: attachmentData, error: attachmentError } = await supabase
+        .from('docket_attachments')
+        .select('*')
+        .eq('docket_id', docketData.id)
+        .order('created_at', { ascending: true });
+
+      if (!attachmentError) {
+        setAttachments(attachmentData || []);
+      }
+
+    } catch (err) {
+      console.error('Error fetching docket:', err);
+      setError('Failed to load docket information');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchComments = async (page: number) => {
+    if (!docket) return;
+
+    setCommentsLoading(true);
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    try {
+      const { data: commentData, error: commentError } = await supabase
+        .from('public_comment_submissions')
+        .select(`
+          id,
+          commenter_name,
+          commenter_organization,
+          content,
+          created_at,
+          public_comment_attachments (count)
+        `)
+        .eq('docket_id', docket.id)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (commentError) {
+        console.error('Error fetching comments:', commentError);
+        return;
+      }
+
+      const formattedComments = commentData?.map(comment => ({
+        id: comment.id,
+        commenter_name: comment.commenter_name,
+        commenter_organization: comment.commenter_organization,
+        content: comment.content,
+        created_at: comment.created_at,
+        attachment_count: comment.public_comment_attachments?.[0]?.count || 0
+      })) || [];
+
+      if (page === 1) {
+        setComments(formattedComments);
+      } else {
+        setComments(prev => [...prev, ...formattedComments]);
+      }
+
+      setHasMoreComments(formattedComments.length === limit);
+      setCommentsPage(page);
+
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const loadMoreComments = () => {
+    fetchComments(commentsPage + 1);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatFileSize = (bytes: number) => {
+    const mb = bytes / (1024 * 1024);
+    return mb < 1 ? `${Math.round(bytes / 1024)}KB` : `${mb.toFixed(1)}MB`;
+  };
+
+  const getDaysRemaining = () => {
+    if (!docket?.close_at) return null;
+    const now = new Date();
+    const close = new Date(docket.close_at);
+    const diffTime = close.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const isCommentingOpen = () => {
+    if (!docket) return false;
+    if (docket.status !== 'open') return false;
+    if (!docket.close_at) return true;
+    return new Date(docket.close_at) > new Date();
+  };
+
+  const copyShareUrl = () => {
+    navigator.clipboard.writeText(window.location.href);
+    // TODO: Show toast notification
+  };
+
+  if (loading) {
+    return (
+      <PublicLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  if (error || !docket) {
+    return (
+      <PublicLayout>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              {error || 'Docket Not Found'}
+            </h1>
+            <p className="text-gray-600 mb-8">
+              The comment period you're looking for could not be found or may have been removed.
+            </p>
+            <Link
+              to="/dockets"
+              className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Browse All Comment Opportunities
+            </Link>
+          </div>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  const daysRemaining = getDaysRemaining();
+  const commentingOpen = isCommentingOpen();
+
+  return (
+    <PublicLayout 
+      title={`${docket.title} - OpenComments`}
+      description={docket.summary || docket.description}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Link
+            to="/dockets"
+            className="inline-flex items-center text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back to All Comment Opportunities
+          </Link>
+        </div>
+
+        {/* Hero Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex-1 mb-6 lg:mb-0 lg:mr-8">
+              <div className="flex items-center mb-4">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mr-4 ${
+                  commentingOpen 
+                    ? daysRemaining && daysRemaining <= 7 
+                      ? 'bg-yellow-100 text-yellow-800' 
+                      : 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {commentingOpen 
+                    ? daysRemaining === null 
+                      ? 'Open' 
+                      : daysRemaining <= 0 
+                        ? 'Closing Soon' 
+                        : `${daysRemaining} Days Left`
+                    : 'Closed'}
+                </span>
+                <span className="text-sm text-gray-600">{docket.agency_name}</span>
+              </div>
+
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                {docket.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Opened {formatDate(docket.open_at)}
+                </div>
+                {docket.close_at && (
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    Closes {formatDate(docket.close_at)}
+                  </div>
+                )}
+                <div className="flex items-center">
+                  <MessageSquare className="w-4 h-4 mr-1" />
+                  {docket.comment_count} public comments
+                </div>
+              </div>
+
+              {docket.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {docket.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col space-y-3 lg:w-64">
+              {commentingOpen ? (
+                <Link
+                  to={`/dockets/${docket.slug}/comment`}
+                  className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Submit Comment
+                </Link>
+              ) : (
+                <div className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-gray-500 bg-gray-100 rounded-lg cursor-not-allowed">
+                  <Clock className="w-5 h-5 mr-2" />
+                  Comment Period Closed
+                </div>
+              )}
+
+              <button
+                onClick={copyShareUrl}
+                className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <Share2 className="w-5 h-5 mr-2" />
+                Share This Page
+              </button>
+            </div>
+          </div>
+
+          {/* Status Banner */}
+          {docket.status === 'archived' && (
+            <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="flex items-center">
+                <AlertCircle className="w-5 h-5 text-gray-600 mr-2" />
+                <span className="text-sm font-medium text-gray-900">
+                  This comment period has been archived and is no longer accepting submissions.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                  activeTab === 'overview'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Overview & Documents
+              </button>
+              <button
+                onClick={() => setActiveTab('comments')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                  activeTab === 'comments'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Public Comments ({docket.comment_count})
+              </button>
+            </nav>
+          </div>
+
+          <div className="p-6">
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="space-y-8">
+                {/* Description */}
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
+                  <div className="prose max-w-none text-gray-700">
+                    {(docket.summary || docket.description).split('\n').map((paragraph, index) => (
+                      <p key={index} className="mb-4">{paragraph}</p>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Supporting Documents */}
+                {attachments.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Supporting Documents</h2>
+                    <div className="space-y-3">
+                      {attachments.map(attachment => (
+                        <div key={attachment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center">
+                            <FileText className="w-6 h-6 text-gray-400 mr-3" />
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-900">{attachment.filename}</h3>
+                              <p className="text-xs text-gray-600">
+                                {formatFileSize(attachment.file_size)} • {attachment.mime_type}
+                              </p>
+                            </div>
+                          </div>
+                          <a
+                            href={attachment.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                            <ExternalLink className="w-3 h-3 ml-1" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Comment Guidelines */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  <h2 className="text-lg font-semibold text-blue-900 mb-3">How to Submit Effective Comments</h2>
+                  <ul className="space-y-2 text-sm text-blue-800">
+                    <li>• Be specific about which aspects of the proposal you support or oppose</li>
+                    <li>• Provide factual information and evidence to support your position</li>
+                    <li>• Share how the proposal would affect you, your family, or your community</li>
+                    <li>• Suggest specific changes or alternatives if you have concerns</li>
+                    <li>• Keep comments respectful and focused on the proposal</li>
+                  </ul>
+                  {commentingOpen && (
+                    <div className="mt-4">
+                      <Link
+                        to={`/dockets/${docket.slug}/comment`}
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-800 transition-colors"
+                      >
+                        Submit Your Comment
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Comments Tab */}
+            {activeTab === 'comments' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Public Comments ({docket.comment_count})
+                  </h2>
+                  {commentingOpen && (
+                    <Link
+                      to={`/dockets/${docket.slug}/comment`}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-800 transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Add Your Comment
+                    </Link>
+                  )}
+                </div>
+
+                {comments.length === 0 && !commentsLoading ? (
+                  <div className="text-center py-12">
+                    <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No public comments yet</h3>
+                    <p className="text-gray-600 mb-6">
+                      Be the first to share your thoughts on this proposal.
+                    </p>
+                    {commentingOpen && (
+                      <Link
+                        to={`/dockets/${docket.slug}/comment`}
+                        className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"
+                      >
+                        Submit First Comment
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {comments.map(comment => (
+                      <div key={comment.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-900">
+                                {comment.commenter_name || 'Anonymous Commenter'}
+                              </h3>
+                              {comment.commenter_organization && (
+                                <div className="flex items-center text-xs text-gray-600">
+                                  <Building2 className="w-3 h-3 mr-1" />
+                                  {comment.commenter_organization}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500">
+                              {formatDate(comment.created_at)}
+                            </p>
+                            {comment.attachment_count > 0 && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                📎 {comment.attachment_count} attachment{comment.attachment_count !== 1 ? 's' : ''}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="prose max-w-none text-gray-700">
+                          {comment.content.split('\n').map((paragraph, index) => (
+                            <p key={index} className="mb-2">{paragraph}</p>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Load More Comments */}
+                    {hasMoreComments && (
+                      <div className="text-center">
+                        <button
+                          onClick={loadMoreComments}
+                          disabled={commentsLoading}
+                          className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {commentsLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+                              Loading...
+                            </>
+                          ) : (
+                            'Load More Comments'
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        {commentingOpen && (
+          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">
+              Your Voice Matters
+            </h2>
+            <p className="text-blue-800 mb-4">
+              Share your thoughts and help shape this proposal. Public comments are an important part of the democratic process.
+            </p>
+            <Link
+              to={`/dockets/${docket.slug}/comment`}
+              className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Submit Your Comment
+            </Link>
+          </div>
+        )}
+      </div>
+    </PublicLayout>
+  );
+};
+
+export default DocketDetail;
