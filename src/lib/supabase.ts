@@ -11,44 +11,34 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export type UserRole = 'public' | 'agency'
 
-// Agency role system interfaces
+// Agency role system - matches database enums exactly
 export type AgencyRole = 'owner' | 'admin' | 'manager' | 'reviewer' | 'viewer'
+export type DocketStatus = 'draft' | 'open' | 'closed' | 'archived'
+export type CommentStatus = 'pending' | 'approved' | 'rejected' | 'flagged'
+export type ModerationAction = 'approve' | 'reject' | 'flag' | 'unflag' | 'edit' | 'delete'
 
-export interface AgencyMember {
+// Core agency interfaces matching database schema
+export interface Agency {
+  id: string
+  slug: string
+  name: string
+  jurisdiction?: string
+  logo_url?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AgencyUser {
   id: string
   agency_id: string
   user_id: string
   role: AgencyRole
-  invited_by?: string
   joined_at: string
   created_at: string
   updated_at: string
 }
 
-export interface Agency {
-  id: string
-  name: string
-  jurisdiction?: string
-  description?: string
-  logo_url?: string
-  settings: Record<string, any>
-  created_at: string
-  updated_at: string
-}
-
-export interface AgencyInvitation {
-  id: string
-  agency_id: string
-  email: string
-  role: AgencyRole
-  invited_by: string
-  token: string
-  expires_at: string
-  accepted_at?: string
-  created_at: string
-}
-
-export interface DocketTag {
+export interface Tag {
   id: string
   name: string
   description?: string
@@ -56,37 +46,70 @@ export interface DocketTag {
   created_at: string
 }
 
-export interface DocketAttachment {
+export interface DocketTag {
   id: string
   docket_id: string
-  filename: string
-  file_url: string
-  file_size: number
-  mime_type: string
-  uploaded_by: string
+  tag_id: string
   created_at: string
 }
 
-export interface CommentAttachment {
+export interface Docket {
+  id: string
+  agency_id: string
+  title: string
+  description: string
+  summary?: string
+  slug?: string
+  status: DocketStatus
+  open_at?: string
+  close_at?: string
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Comment {
+  id: string
+  docket_id: string
+  user_id: string
+  submitter_name?: string
+  submitter_email?: string
+  content: string
+  body?: string
+  status: CommentStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface Attachment {
   id: string
   comment_id: string
-  filename: string
   file_url: string
-  file_size: number
   mime_type: string
+  file_size: bigint
+  text_extracted?: string
   created_at: string
 }
 
 export interface ModerationLog {
   id: string
   comment_id: string
-  action: 'approve' | 'reject' | 'flag' | 'unflag' | 'edit' | 'delete'
+  action: ModerationAction
   actor_id: string
-  previous_status?: 'pending' | 'approved' | 'rejected' | 'flagged'
-  new_status?: 'pending' | 'approved' | 'rejected' | 'flagged'
+  timestamp: string
   reason?: string
   notes?: string
   created_at: string
+}
+
+export interface AgencySettings {
+  agency_id: string
+  max_file_size_mb: number
+  allowed_mime_types: string[]
+  captcha_enabled: boolean
+  auto_publish: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface UserProfile {
