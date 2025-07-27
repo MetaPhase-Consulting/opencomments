@@ -13,15 +13,18 @@ export type UserRole = 'public' | 'agency'
 
 // Agency role system - matches database enums exactly
 export type AgencyRole = 'owner' | 'admin' | 'manager' | 'reviewer' | 'viewer'
-export type DocketStatus = 'draft' | 'open' | 'closed' | 'archived'
 export type CommentStatus = 'pending' | 'approved' | 'rejected' | 'flagged'
 export type ModerationAction = 'approve' | 'reject' | 'flag' | 'unflag' | 'edit' | 'delete'
+
+// Database enums
+export type DocketStatus = 'draft' | 'open' | 'closed' | 'archived'
+export type AuditAction = 'INSERT' | 'UPDATE' | 'DELETE'
 
 // Audit interfaces
 export interface AuditRecord {
   id: string
   record_id: string
-  action: 'INSERT' | 'UPDATE' | 'DELETE'
+  action: AuditAction
   actor_id?: string
   old_data?: any
   new_data?: any
@@ -112,9 +115,14 @@ export interface CommentAttachment {
   comment_id: string
   filename: string
   file_url: string
+  file_path: string
   mime_type: string
   file_size: number
   created_at: string
+  created_by?: string
+  updated_at: string
+  updated_by?: string
+  deleted_at?: string
 }
 
 export interface DocketAttachment {
@@ -136,7 +144,6 @@ export interface ModerationLog {
   previous_status?: CommentStatus
   new_status?: CommentStatus
   reason?: string
-  notes?: string
   notes?: string
   created_at: string
 }
