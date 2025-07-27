@@ -77,6 +77,14 @@ function App() {
                 </div>
               </AgencyProtectedRoute>
             } />
+            <Route path="/agency/threads/new" element={
+              <AgencyProtectedRoute>
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">New Thread</h1>
+                  <p className="text-gray-600">Thread creation coming soon</p>
+                </div>
+              </AgencyProtectedRoute>
+            } />
             <Route path="/agency/moderation" element={
               <AgencyProtectedRoute>
                 <div className="text-center py-12">
@@ -85,10 +93,42 @@ function App() {
                 </div>
               </AgencyProtectedRoute>
             } />
+            <Route path="/agency/moderation/queue" element={
+              <AgencyProtectedRoute>
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Review Queue</h1>
+                  <p className="text-gray-600">Comment review queue coming soon</p>
+                </div>
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/moderation/flagged" element={
+              <AgencyProtectedRoute>
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Flagged Items</h1>
+                  <p className="text-gray-600">Flagged content management coming soon</p>
+                </div>
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/search" element={
+              <AgencyProtectedRoute>
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Global Search</h1>
+                  <p className="text-gray-600">Search functionality coming soon</p>
+                </div>
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/reports" element={
+              <AgencyProtectedRoute>
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Reports & Exports</h1>
+                  <p className="text-gray-600">Reporting features coming soon</p>
+                </div>
+              </AgencyProtectedRoute>
+            } />
             <Route path="/agency/users" element={
               <AgencyProtectedRoute>
                 <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Users</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Users & Roles</h1>
                   <p className="text-gray-600">User management coming soon</p>
                 </div>
               </AgencyProtectedRoute>
@@ -96,7 +136,7 @@ function App() {
             <Route path="/agency/settings" element={
               <AgencyProtectedRoute>
                 <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Settings</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Agency Settings</h1>
                   <p className="text-gray-600">Agency settings coming soon</p>
                 </div>
               </AgencyProtectedRoute>
