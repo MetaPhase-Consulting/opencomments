@@ -3,6 +3,7 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import PublicLayout from '../../components/PublicLayout';
 import { useAuth } from '../../contexts/AuthContext';
+import HCaptchaComponent from '../../components/HCaptcha';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -893,15 +894,25 @@ const CommentWizard = () => {
 
               {/* CAPTCHA Placeholder */}
               {docket?.require_captcha && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                  <p className="text-sm text-gray-600 mb-2">CAPTCHA verification required</p>
-                  <div className="w-64 h-16 bg-gray-200 rounded mx-auto flex items-center justify-center">
-                    <span className="text-gray-500 text-sm">CAPTCHA placeholder</span>
-                  </div>
-                  <input
-                    type="hidden"
-                    value={formData.captchaToken}
-                    onChange={(e) => updateFormData('captchaToken', e.target.value)}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3 text-center">
+                    Security Verification Required
+                  </h3>
+                  <HCaptchaComponent
+                    onVerify={(token) => {
+                      updateFormData('captchaToken', token);
+                      setError(null);
+                    }}
+                    onError={(error) => {
+                      updateFormData('captchaToken', '');
+                      setError('CAPTCHA verification failed. Please try again.');
+                    }}
+                    onExpire={() => {
+                      updateFormData('captchaToken', '');
+                      setError('CAPTCHA expired. Please verify again.');
+                    }}
+                    size="normal"
+                    theme="light"
                   />
                 </div>
               )}
