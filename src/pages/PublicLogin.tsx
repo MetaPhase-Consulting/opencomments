@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SecurityBanner from '../components/SecurityBanner'
 
 const PublicLogin = () => {
   const { user, profile } = useAuth()
