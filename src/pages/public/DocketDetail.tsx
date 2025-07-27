@@ -30,10 +30,14 @@ interface DocketData {
   agency_name: string;
   agency_jurisdiction?: string;
   comment_count: number;
+  max_comment_length: number;
+  max_comments_per_user: number;
+  uploads_enabled: boolean;
+  max_files_per_comment: number;
+  allowed_mime_types: string[];
+  max_file_size_mb: number;
   auto_publish: boolean;
   require_captcha: boolean;
-  max_file_size_mb: number;
-  allowed_file_types: string[];
 }
 
 interface DocketAttachment {
@@ -95,10 +99,14 @@ const DocketDetail = () => {
           open_at,
           close_at,
           tags,
+          max_comment_length,
+          max_comments_per_user,
+          uploads_enabled,
+          max_files_per_comment,
+          allowed_mime_types,
+          max_file_size_mb,
           auto_publish,
           require_captcha,
-          max_file_size_mb,
-          allowed_file_types,
           agencies!inner (
             name,
             jurisdiction
@@ -477,6 +485,22 @@ const DocketDetail = () => {
                     <li>• Suggest specific changes or alternatives if you have concerns</li>
                     <li>• Keep comments respectful and focused on the proposal</li>
                   </ul>
+                  
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <h3 className="text-sm font-medium text-blue-900 mb-2">Submission Guidelines</h3>
+                    <div className="text-xs text-blue-700 space-y-1">
+                      <p>• Maximum {docket.max_comment_length.toLocaleString()} characters per comment</p>
+                      <p>• Up to {docket.max_comments_per_user} comments per person</p>
+                      {docket.uploads_enabled ? (
+                        <p>• Up to {docket.max_files_per_comment} files, {docket.max_file_size_mb}MB each</p>
+                      ) : (
+                        <p>• File uploads not enabled for this docket</p>
+                      )}
+                      <p>• Account registration required for submission</p>
+                      {docket.require_captcha && <p>• CAPTCHA verification required</p>}
+                    </div>
+                  </div>
+                  
                   {commentingOpen && (
                     <div className="mt-4">
                       <Link

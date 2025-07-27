@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '../lib/supabase'
@@ -10,12 +10,14 @@ import SecurityBanner from '../components/SecurityBanner'
 
 const PublicLogin = () => {
   const { user, profile } = useAuth()
+  const [searchParams] = useSearchParams()
+  const nextUrl = searchParams.get('next')
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
 
   // Redirect if already logged in
   if (user && profile) {
     if (profile.role === 'public') {
-      return <Navigate to="/dashboard" replace />
+      return <Navigate to={nextUrl || "/dashboard"} replace />
     } else if (profile.role === 'agency') {
       return <Navigate to="/agency-dashboard" replace />
     }
@@ -65,6 +67,7 @@ const PublicLogin = () => {
           <Auth
             supabaseClient={supabase}
             view={view}
+            providers={['github', 'google']}
             appearance={{
               theme: ThemeSupa,
               variables: {
@@ -76,9 +79,11 @@ const PublicLogin = () => {
                 },
               },
             }}
-            providers={['github', 'google']}
-            redirectTo={`${window.location.origin}/dashboard`}
+            redirectTo={`${window.location.origin}${nextUrl || '/dashboard'}`}
             onlyThirdPartyProviders={false}
+            additionalData={{
+              role: 'public'
+            }}
           />
 
           <div className="mt-6 text-center">

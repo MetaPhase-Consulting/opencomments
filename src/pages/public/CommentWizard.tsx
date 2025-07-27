@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import PublicLayout from '../../components/PublicLayout';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,6 +9,7 @@ import {
   User, 
   MessageSquare, 
   Paperclip,
+  Shield,
   CheckCircle,
   Upload,
   X,
@@ -22,8 +23,12 @@ interface DocketInfo {
   title: string;
   status: string;
   close_at?: string;
+  max_comment_length: number;
+  max_comments_per_user: number;
+  uploads_enabled: boolean;
+  max_files_per_comment: number;
+  allowed_mime_types: string[];
   max_file_size_mb: number;
-  allowed_file_types: string[];
   require_captcha: boolean;
   agency_name: string;
 }
@@ -33,14 +38,24 @@ interface CommentForm {
   email: string;
   organization: string;
   content: string;
+  representation: 'myself' | 'organization' | 'behalf_of_another';
+  organizationName: string;
+  authorizationStatement: string;
+  perjuryCertified: boolean;
   files: File[];
   agreedToPublic: boolean;
+  captchaToken: string;
 }
 
 const CommentWizard = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+  
+  // Redirect to login if not authenticated
+  if (!authLoading && !user) {
+    return <Navigate to={`/login?next=/dockets/${slug}/comment`} replace />;
+  }
   
   const [currentStep, setCurrentStep] = useState(1);
   const [docket, setDocket] = useState<DocketInfo | null>(null);
@@ -53,12 +68,16 @@ const CommentWizard = () => {
     email: user?.email || '',
     organization: '',
     content: '',
+    representation: 'myself',
+    organizationName: '',
+    authorizationStatement: '',
+    perjuryCertified: false,
     files: [],
-    agreedToPublic: false
+    agreedToPublic: false,
+    captchaToken: ''
   });
 
-  const maxSteps = 4;
-  const maxCharacters = 4000;
+  const maxSteps = 5;
 
   useEffect(() => {
     if (slug) {
@@ -78,8 +97,12 @@ const CommentWizard = () => {
           title,
           status,
           close_at,
+          max_comment_length,
+          max_comments_per_user,
+          uploads_enabled,
+          max_files_per_comment,
+          allowed_mime_types,
           max_file_size_mb,
-          allowed_file_types,
           require_captcha,
           agencies!inner (name)
         `)
@@ -120,6 +143,11 @@ const CommentWizard = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
+    if (!docket?.uploads_enabled) {
+      setError('File uploads are not allowed for this docket');
+      return;
+    }
+    
     // Validate files
     const validFiles: File[] = [];
     const errors: string[] = [];
@@ -133,8 +161,8 @@ const CommentWizard = () => {
       }
 
       // Check file type
-      const extension = file.name.split('.').pop()?.toLowerCase();
-      if (!extension || !(docket?.allowed_file_types || []).includes(extension)) {
+      const mimeType = file.type;
+      if (!mimeType || !(docket?.allowed_mime_types || []).includes(mimeType)) {
         errors.push(`${file.name}: File type not allowed`);
         return;
       }
@@ -148,9 +176,10 @@ const CommentWizard = () => {
     }
 
     // Check total file count
+    const maxFiles = docket?.max_files_per_comment || 3;
     const totalFiles = formData.files.length + validFiles.length;
-    if (totalFiles > 3) {
-      setError('Maximum 3 files allowed');
+    if (totalFiles > maxFiles) {
+      setError(`Maximum ${maxFiles} files allowed`);
       return;
     }
 
@@ -180,19 +209,37 @@ const CommentWizard = () => {
           setError('Please enter your comment');
           return false;
         }
-        if (formData.content.length > maxCharacters) {
-          setError(`Comment must be ${maxCharacters} characters or less`);
+        const maxLength = docket?.max_comment_length || 4000;
+        if (formData.content.length > maxLength) {
+          setError(`Comment must be ${maxLength} characters or less`);
           return false;
         }
         return true;
 
       case 3:
-        // File validation already handled in upload
+        if (!docket?.uploads_enabled) {
+          return true; // Skip file validation if uploads disabled
+        }
         return true;
 
       case 4:
+        if (formData.representation !== 'myself' && !formData.organizationName.trim()) {
+          setError('Organization name is required when representing an organization');
+          return false;
+        }
+        if (!formData.perjuryCertified) {
+          setError('You must certify the accuracy of your information under penalty of perjury');
+          return false;
+        }
+        return true;
+
+      case 5:
         if (!formData.agreedToPublic) {
           setError('You must acknowledge that your comment will be public');
+          return false;
+        }
+        if (docket?.require_captcha && !formData.captchaToken) {
+          setError('Please complete the CAPTCHA verification');
           return false;
         }
         return true;
@@ -213,26 +260,37 @@ const CommentWizard = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(4) || !docket) return;
+    if (!validateStep(5) || !docket || !user) return;
 
     setSubmitting(true);
     setError(null);
 
     try {
-      // Submit comment via RPC
-      const { data: result, error: submitError } = await supabase.rpc('submit_public_comment', {
+      // Get OAuth provider info if available
+      const oauthProvider = user.app_metadata?.provider || null;
+      const oauthUid = user.user_metadata?.provider_id || user.id;
+      
+      // Submit comment via authenticated RPC
+      const { data: result, error: submitError } = await supabase.rpc('submit_authenticated_comment', {
         p_docket_slug: slug,
+        p_content: formData.content.trim(),
         p_commenter_name: formData.name.trim() || null,
         p_commenter_email: formData.email.trim() || null,
         p_commenter_organization: formData.organization.trim() || null,
-        p_content: formData.content.trim(),
+        p_representation: formData.representation,
+        p_organization_name: formData.organizationName.trim() || null,
+        p_authorization_statement: formData.authorizationStatement.trim() || null,
+        p_perjury_certified: formData.perjuryCertified,
+        p_captcha_token: formData.captchaToken || null,
+        p_oauth_provider: oauthProvider,
+        p_oauth_uid: oauthUid,
         p_ip_address: null, // Will be set by server if needed
         p_user_agent: navigator.userAgent
       });
 
-      if (submitError) {
+      if (submitError || !result.success) {
         console.error('Submit error:', submitError);
-        setError('Failed to submit comment. Please try again.');
+        setError(result?.error || 'Failed to submit comment. Please try again.');
         return;
       }
 
@@ -244,7 +302,7 @@ const CommentWizard = () => {
         for (const file of formData.files) {
           const fileExtension = file.name.split('.').pop();
           const fileName = `${crypto.randomUUID()}.${fileExtension}`;
-          const filePath = `public/docket/${docket.id}/${commentId}/${fileName}`;
+          const filePath = `authenticated/docket/${docket.id}/${commentId}/${fileName}`;
 
           // Upload to storage
           const { error: uploadError } = await supabase.storage
@@ -264,11 +322,12 @@ const CommentWizard = () => {
 
           // Save attachment record
           await supabase
-            .from('public_comment_attachments')
+            .from('comment_attachments')
             .insert({
               comment_id: commentId,
               filename: file.name,
               file_url: urlData.publicUrl,
+              file_path: filePath,
               file_path: filePath,
               mime_type: file.type,
               file_size: file.size
@@ -297,10 +356,21 @@ const CommentWizard = () => {
       case 1: return User;
       case 2: return MessageSquare;
       case 3: return Paperclip;
-      case 4: return CheckCircle;
+      case 4: return Shield;
+      case 5: return CheckCircle;
       default: return User;
     }
   };
+
+  if (authLoading) {
+    return (
+      <PublicLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+        </div>
+      </PublicLayout>
+    );
+  }
 
   if (loading) {
     return (
@@ -392,6 +462,7 @@ const CommentWizard = () => {
             <span className="text-xs text-gray-600">Your Details</span>
             <span className="text-xs text-gray-600">Your Comment</span>
             <span className="text-xs text-gray-600">Attachments</span>
+            <span className="text-xs text-gray-600">Certification</span>
             <span className="text-xs text-gray-600">Review & Submit</span>
           </div>
         </div>
@@ -503,11 +574,11 @@ const CommentWizard = () => {
                     Be specific and provide evidence to support your position
                   </p>
                   <p className={`text-xs ${
-                    formData.content.length > maxCharacters * 0.9 
+                    formData.content.length > (docket?.max_comment_length || 4000) * 0.9 
                       ? 'text-red-600' 
                       : 'text-gray-500'
                   }`}>
-                    {formData.content.length}/{maxCharacters} characters
+                    {formData.content.length}/{docket?.max_comment_length || 4000} characters
                   </p>
                 </div>
               </div>
@@ -529,72 +600,220 @@ const CommentWizard = () => {
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Supporting Documents</h2>
-                <p className="text-gray-600 mb-6">
-                  Upload relevant documents, photos, or research to support your comment. 
-                  All attachments will be part of the public record.
-                </p>
-              </div>
-
-              {/* File Upload Area */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">
-                  Drag and drop files here, or click to select
-                </p>
-                <input
-                  type="file"
-                  multiple
-                  accept={docket?.allowed_file_types.map(type => `.${type}`).join(',')}
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Select Files
-                </label>
-                <p className="text-xs text-gray-500 mt-2">
-                  Maximum {docket?.max_file_size_mb}MB per file • 
-                  Allowed types: {docket?.allowed_file_types.join(', ').toUpperCase()} • 
-                  Up to 3 files total
-                </p>
-              </div>
-
-              {/* Uploaded Files */}
-              {formData.files.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">
-                    Uploaded Files ({formData.files.length}/3)
-                  </h3>
-                  <div className="space-y-2">
-                    {formData.files.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center">
-                          <FileText className="w-5 h-5 text-gray-400 mr-3" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                            <p className="text-xs text-gray-600">{formatFileSize(file.size)}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="text-red-600 hover:text-red-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
-                          aria-label={`Remove ${file.name}`}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                {docket?.uploads_enabled ? (
+                  <p className="text-gray-600 mb-6">
+                    Upload relevant documents, photos, or research to support your comment. 
+                    All attachments will be part of the public record.
+                  </p>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                    <p className="text-gray-600">
+                      File uploads are not enabled for this comment period. 
+                      Please include any supporting information in your comment text.
+                    </p>
                   </div>
-                </div>
+                )}
+              </div>
+
+              {docket?.uploads_enabled && (
+                <>
+                  {/* File Upload Area */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">
+                      Drag and drop files here, or click to select
+                    </p>
+                    <input
+                      type="file"
+                      multiple
+                      accept={docket?.allowed_mime_types.join(',')}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      Select Files
+                    </label>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Maximum {docket?.max_file_size_mb}MB per file • 
+                      Up to {docket?.max_files_per_comment} files total
+                    </p>
+                  </div>
+
+                  {/* Uploaded Files */}
+                  {formData.files.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900 mb-3">
+                        Uploaded Files ({formData.files.length}/{docket?.max_files_per_comment})
+                      </h3>
+                      <div className="space-y-2">
+                        {formData.files.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex items-center">
+                              <FileText className="w-5 h-5 text-gray-400 mr-3" />
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                                <p className="text-xs text-gray-600">{formatFileSize(file.size)}</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeFile(index)}
+                              className="text-red-600 hover:text-red-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                              aria-label={`Remove ${file.name}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
 
-          {/* Step 4: Review & Submit */}
+          {/* Step 4: Representation & Certification */}
           {currentStep === 4 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Representation & Certification</h2>
+                <p className="text-gray-600 mb-6">
+                  Please specify who you are representing and certify the accuracy of your submission.
+                </p>
+              </div>
+
+              {/* Representation */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  I am submitting this comment: <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-3">
+                  <label className="flex items-start">
+                    <input
+                      type="radio"
+                      name="representation"
+                      value="myself"
+                      checked={formData.representation === 'myself'}
+                      onChange={(e) => updateFormData('representation', e.target.value)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-0.5"
+                      required
+                    />
+                    <div className="ml-3">
+                      <span className="text-sm font-medium text-gray-900">For myself</span>
+                      <p className="text-sm text-gray-600">I am submitting my personal views and opinions</p>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-start">
+                    <input
+                      type="radio"
+                      name="representation"
+                      value="organization"
+                      checked={formData.representation === 'organization'}
+                      onChange={(e) => updateFormData('representation', e.target.value)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-0.5"
+                    />
+                    <div className="ml-3">
+                      <span className="text-sm font-medium text-gray-900">For my organization</span>
+                      <p className="text-sm text-gray-600">I am authorized to represent my organization's position</p>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-start">
+                    <input
+                      type="radio"
+                      name="representation"
+                      value="behalf_of_another"
+                      checked={formData.representation === 'behalf_of_another'}
+                      onChange={(e) => updateFormData('representation', e.target.value)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-0.5"
+                    />
+                    <div className="ml-3">
+                      <span className="text-sm font-medium text-gray-900">On behalf of another person or entity</span>
+                      <p className="text-sm text-gray-600">I have authorization to submit this comment for someone else</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Organization Name */}
+              {formData.representation !== 'myself' && (
+                <div>
+                  <label htmlFor="organizationName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Organization or Entity Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="organizationName"
+                    value={formData.organizationName}
+                    onChange={(e) => updateFormData('organizationName', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Full legal name of organization or entity"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Authorization Statement */}
+              {formData.representation !== 'myself' && (
+                <div>
+                  <label htmlFor="authorizationStatement" className="block text-sm font-medium text-gray-700 mb-1">
+                    Authorization Statement
+                  </label>
+                  <textarea
+                    id="authorizationStatement"
+                    value={formData.authorizationStatement}
+                    onChange={(e) => updateFormData('authorizationStatement', e.target.value)}
+                    rows={3}
+                    maxLength={1000}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Briefly describe your authority to submit this comment on behalf of the organization..."
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Optional but recommended • {formData.authorizationStatement.length}/1000 characters
+                  </p>
+                </div>
+              )}
+
+              {/* Perjury Certification */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <label className="flex items-start">
+                  <input
+                    type="checkbox"
+                    checked={formData.perjuryCertified}
+                    onChange={(e) => updateFormData('perjuryCertified', e.target.checked)}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mt-0.5"
+                    required
+                  />
+                  <div className="ml-3">
+                    <span className="text-sm font-medium text-red-800">
+                      Certification Under Penalty of Perjury <span className="text-red-600">*</span>
+                    </span>
+                    <p className="text-sm text-red-700 mt-1">
+                      I certify, under penalty of perjury (
+                      <a 
+                        href="https://www.law.cornell.edu/uscode/text/28/1746" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="underline hover:text-red-800"
+                      >
+                        28 U.S.C. § 1746
+                      </a>
+                      ), that the information provided is true and accurate to the best of my knowledge, 
+                      and I am authorized to submit this comment.
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Review & Submit */}
+          {currentStep === 5 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Review Your Comment</h2>
@@ -613,6 +832,14 @@ const CommentWizard = () => {
                     <p><strong>Email:</strong> {formData.email || 'Not provided'}</p>
                     {formData.organization && (
                       <p><strong>Organization:</strong> {formData.organization}</p>
+                    )}
+                    <p><strong>Representing:</strong> {
+                      formData.representation === 'myself' ? 'Myself' :
+                      formData.representation === 'organization' ? 'My organization' :
+                      'Another person or entity'
+                    }</p>
+                    {formData.organizationName && (
+                      <p><strong>Organization Name:</strong> {formData.organizationName}</p>
                     )}
                   </div>
                 </div>
@@ -643,12 +870,21 @@ const CommentWizard = () => {
                 )}
               </div>
 
+              {/* Certification Summary */}
+              <div className="bg-green-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-green-900 mb-2">Certification Status</h3>
+                <div className="flex items-center text-sm text-green-800">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Certified under penalty of perjury (28 U.S.C. § 1746)
+                </div>
+              </div>
+
               {/* Public Record Agreement */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <label className="flex items-start">
                   <input
                     type="checkbox"
-                    checked={formData.agreedToPublic}
+                    maxLength={docket?.max_comment_length || 4000}
                     onChange={(e) => updateFormData('agreedToPublic', e.target.checked)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
                     required
@@ -672,6 +908,11 @@ const CommentWizard = () => {
                   <div className="w-64 h-16 bg-gray-200 rounded mx-auto flex items-center justify-center">
                     <span className="text-gray-500 text-sm">CAPTCHA placeholder</span>
                   </div>
+                  <input
+                    type="hidden"
+                    value={formData.captchaToken}
+                    onChange={(e) => updateFormData('captchaToken', e.target.value)}
+                  />
                 </div>
               )}
             </div>
@@ -707,7 +948,7 @@ const CommentWizard = () => {
               ) : (
                 <button
                   onClick={handleSubmit}
-                  disabled={submitting || !formData.agreedToPublic}
+                  disabled={submitting || !formData.agreedToPublic || !formData.perjuryCertified}
                   className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {submitting ? (
