@@ -1,5 +1,5 @@
-import React from 'react';
-import { Github, Linkedin } from 'lucide-react';
+import React from 'react'
+import { Github, Linkedin } from 'lucide-react'
 
 const Footer = () => {
   return (
@@ -106,10 +106,10 @@ const Footer = () => {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="/help"
+                    href="/contact"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Help center
+                    Contact us
                   </a>
                 </li>
                 <li>
@@ -122,7 +122,9 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
-                    href="/status"
+                    href="https://status.opencomments.us"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
                     System status
@@ -222,7 +224,7 @@ const Footer = () => {
         </div>
       </footer>
     </>
-  );
-};
+  )
+}
 
-export default Footer;
+export default Footer
