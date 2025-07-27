@@ -140,7 +140,7 @@ const Header = () => {
             {/* Right Navigation */}
             <div className="hidden md:flex items-center space-x-4">
               <a
-                href="/agency-login"
+                href="/agency/login"
                 className="px-4 py-2 text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{ 
                   color: '#D9253A', 
@@ -232,7 +232,7 @@ const Header = () => {
               {/* Mobile Auth Links */}
               <div className="pt-4 border-t border-gray-200 space-y-2">
                 <a
-                  href="/agency-login"
+                  href="/agency/login"
                   className="block w-full px-4 py-2 text-center text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-red-600 hover:text-white"
                   style={{ 
                     color: '#D9253A', 

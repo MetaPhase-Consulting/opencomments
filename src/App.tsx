@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { AgencyProvider } from './contexts/AgencyContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AgencyProtectedRoute from './components/AgencyProtectedRoute';
 import SecurityBanner from './components/SecurityBanner';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -16,44 +18,148 @@ import PublicLogin from './pages/PublicLogin';
 import AgencyLogin from './pages/AgencyLogin';
 import PublicDashboard from './pages/PublicDashboard';
 import AgencyDashboard from './pages/AgencyDashboard';
+import AgencyLoginNew from './pages/agency/AgencyLogin';
+import AgencySelect from './pages/agency/AgencySelect';
+import AgencyNoAccess from './pages/agency/AgencyNoAccess';
+import AgencyDashboardNew from './pages/agency/AgencyDashboard';
+import DocketList from './pages/agency/DocketList';
+import DocketWizard from './pages/agency/DocketWizard';
+import AgencyDocketDetail from './pages/agency/DocketDetail';
+import ModerationQueue from './pages/agency/ModerationQueue';
+import AgencySettings from './pages/agency/AgencySettings';
+import GlobalSearch from './pages/agency/GlobalSearch';
+import Reports from './pages/agency/Reports';
 import Unauthorized from './pages/Unauthorized';
+import Contact from './pages/Contact';
+import DocketBrowse from './pages/public/DocketBrowse';
+import PublicDocketDetail from './pages/public/DocketDetail';
+import CommentWizard from './pages/public/CommentWizard';
+import ThankYou from './pages/public/ThankYou';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={
-            <div className="min-h-screen bg-white font-sans">
-              <SecurityBanner />
-              <Header />
-              <main>
-                <Hero />
-                <StateDirectory />
-                <FeatureHighlights />
-                <CalloutBanner />
-              </main>
-              <Footer />
-            </div>
-          } />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/accessibility" element={<Accessibility />} />
-          <Route path="/login" element={<PublicLogin />} />
-          <Route path="/agency-login" element={<AgencyLogin />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute requiredRole="public">
-              <PublicDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/agency-dashboard" element={
-            <ProtectedRoute requiredRole="agency">
-              <AgencyDashboard />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </Router>
+      <AgencyProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={
+              <div className="min-h-screen bg-white font-sans">
+                <SecurityBanner />
+                <Header />
+                <main>
+                  <Hero />
+                  <StateDirectory />
+                  <FeatureHighlights />
+                  <CalloutBanner />
+                </main>
+                <Footer />
+              </div>
+            } />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/accessibility" element={<Accessibility />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/dockets" element={<DocketBrowse />} />
+            <Route path="/dockets/:slug" element={<PublicDocketDetail />} />
+            <Route path="/dockets/:slug/comment" element={<CommentWizard />} />
+            <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/login" element={<PublicLogin />} />
+            <Route path="/agency-login" element={<AgencyLogin />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute requiredRole="public">
+                <PublicDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/agency-dashboard" element={
+              <ProtectedRoute requiredRole="agency">
+                <AgencyDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* New Agency Admin Routes */}
+            <Route path="/agency/login" element={<AgencyLoginNew />} />
+            <Route path="/agency/select" element={<AgencySelect />} />
+            <Route path="/agency/no-access" element={<AgencyNoAccess />} />
+            <Route path="/agency/dashboard" element={
+              <AgencyProtectedRoute>
+                <AgencyDashboardNew />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/threads" element={
+              <AgencyProtectedRoute>
+                <DocketList />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/threads/new" element={
+              <AgencyProtectedRoute>
+                <DocketWizard />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets" element={
+              <AgencyProtectedRoute>
+                <DocketList />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets/new" element={
+              <AgencyProtectedRoute>
+                <DocketWizard />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets/:id" element={
+              <AgencyProtectedRoute>
+                <AgencyDocketDetail />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets/:id/edit" element={
+              <AgencyProtectedRoute>
+                <DocketWizard />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/moderation" element={
+              <AgencyProtectedRoute>
+                <ModerationQueue />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/moderation/queue" element={
+              <AgencyProtectedRoute>
+                <ModerationQueue />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/moderation/flagged" element={
+              <AgencyProtectedRoute>
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Flagged Items</h1>
+                  <p className="text-gray-600">Flagged content management coming soon</p>
+                </div>
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/search" element={
+              <AgencyProtectedRoute>
+                <GlobalSearch />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/reports" element={
+              <AgencyProtectedRoute>
+                <Reports />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/users" element={
+              <AgencyProtectedRoute>
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Users & Roles</h1>
+                  <p className="text-gray-600">User management coming soon</p>
+                </div>
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/settings" element={
+              <AgencyProtectedRoute>
+                <AgencySettings />
+              </AgencyProtectedRoute>
+            } />
+          </Routes>
+        </Router>
+      </AgencyProvider>
     </AuthProvider>
   );
 }
