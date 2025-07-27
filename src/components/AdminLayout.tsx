@@ -106,9 +106,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       href: '/agency/reports',
       icon: BarChart3,
       current: location.pathname.startsWith('/agency/reports'),
-      permission: 'bulk_export' as const,
-      disabled: true,
-      tooltip: 'Coming soon'
+      permission: 'view_dashboard' as const
     },
     {
       name: 'Users & Roles',
