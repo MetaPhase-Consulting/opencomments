@@ -49,21 +49,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       permission: 'view_dashboard' as const
     },
     {
-      name: 'Threads',
-      href: '/agency/threads',
+      name: 'Dockets',
+      href: '/agency/dockets',
       icon: MessageSquare,
-      current: location.pathname.startsWith('/agency/threads'),
+      current: location.pathname.startsWith('/agency/dockets') || location.pathname.startsWith('/agency/threads'),
       permission: 'view_dashboard' as const,
       children: [
         {
-          name: 'All Threads',
-          href: '/agency/threads',
-          current: location.pathname === '/agency/threads'
+          name: 'All Dockets',
+          href: '/agency/dockets',
+          current: location.pathname === '/agency/dockets' || location.pathname === '/agency/threads'
         },
         {
-          name: 'New Thread',
-          href: '/agency/threads/new',
-          current: location.pathname === '/agency/threads/new',
+          name: 'New Docket',
+          href: '/agency/dockets/new',
+          current: location.pathname === '/agency/dockets/new' || location.pathname === '/agency/threads/new',
           permission: 'create_thread' as const
         }
       ]

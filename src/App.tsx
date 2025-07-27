@@ -22,6 +22,9 @@ import AgencyLoginNew from './pages/agency/AgencyLogin';
 import AgencySelect from './pages/agency/AgencySelect';
 import AgencyNoAccess from './pages/agency/AgencyNoAccess';
 import AgencyDashboardNew from './pages/agency/AgencyDashboard';
+import DocketList from './pages/agency/DocketList';
+import DocketWizard from './pages/agency/DocketWizard';
+import DocketDetail from './pages/agency/DocketDetail';
 import Unauthorized from './pages/Unauthorized';
 
 function App() {
@@ -71,18 +74,32 @@ function App() {
             } />
             <Route path="/agency/threads" element={
               <AgencyProtectedRoute>
-                <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Threads</h1>
-                  <p className="text-gray-600">Thread management coming soon</p>
-                </div>
+                <DocketList />
               </AgencyProtectedRoute>
             } />
             <Route path="/agency/threads/new" element={
               <AgencyProtectedRoute>
-                <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">New Thread</h1>
-                  <p className="text-gray-600">Thread creation coming soon</p>
-                </div>
+                <DocketWizard />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets" element={
+              <AgencyProtectedRoute>
+                <DocketList />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets/new" element={
+              <AgencyProtectedRoute>
+                <DocketWizard />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets/:id" element={
+              <AgencyProtectedRoute>
+                <DocketDetail />
+              </AgencyProtectedRoute>
+            } />
+            <Route path="/agency/dockets/:id/edit" element={
+              <AgencyProtectedRoute>
+                <DocketWizard />
               </AgencyProtectedRoute>
             } />
             <Route path="/agency/moderation" element={
