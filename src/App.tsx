@@ -26,6 +26,7 @@ import DocketList from './pages/agency/DocketList';
 import DocketWizard from './pages/agency/DocketWizard';
 import DocketDetail from './pages/agency/DocketDetail';
 import ModerationQueue from './pages/agency/ModerationQueue';
+import AgencySettings from './pages/agency/AgencySettings';
 import Unauthorized from './pages/Unauthorized';
 
 function App() {
@@ -147,10 +148,7 @@ function App() {
             } />
             <Route path="/agency/settings" element={
               <AgencyProtectedRoute>
-                <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Agency Settings</h1>
-                  <p className="text-gray-600">Agency settings coming soon</p>
-                </div>
+                <AgencySettings />
               </AgencyProtectedRoute>
             } />
           </Routes>
