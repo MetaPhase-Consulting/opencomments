@@ -28,6 +28,7 @@ import DocketDetail from './pages/agency/DocketDetail';
 import ModerationQueue from './pages/agency/ModerationQueue';
 import AgencySettings from './pages/agency/AgencySettings';
 import GlobalSearch from './pages/agency/GlobalSearch';
+import Reports from './pages/agency/Reports';
 import Unauthorized from './pages/Unauthorized';
 
 function App() {
@@ -130,10 +131,7 @@ function App() {
             } />
             <Route path="/agency/reports" element={
               <AgencyProtectedRoute>
-                <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Reports & Exports</h1>
-                  <p className="text-gray-600">Reporting features coming soon</p>
-                </div>
+                <Reports />
               </AgencyProtectedRoute>
             } />
             <Route path="/agency/users" element={

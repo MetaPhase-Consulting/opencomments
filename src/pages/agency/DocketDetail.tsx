@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { usePermissions } from '../../hooks/usePermissions'
 import { useAgency } from '../../contexts/AgencyContext'
 import { PermissionButton } from '../../components/PermissionGate'
+import ExportModal from '../../components/ExportModal'
 import { 
   ChevronLeft,
   Calendar,
@@ -80,6 +81,7 @@ const DocketDetail = () => {
   const [loading, setLoading] = useState(true)
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [pendingStatusChange, setPendingStatusChange] = useState<'open' | 'closed' | 'archived' | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
 
   // TODO: Replace with actual API calls
   useEffect(() => {
@@ -307,6 +309,15 @@ const DocketDetail = () => {
               <Share2 className="w-4 h-4 mr-1" />
               Share
             </button>
+            
+            <PermissionButton
+              permission="bulk_export"
+              onClick={() => setShowExportModal(true)}
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Export
+            </PermissionButton>
             
             <PermissionButton
               permission="edit_thread"
@@ -763,6 +774,14 @@ const DocketDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        docketId={docket?.id}
+        docketTitle={docket?.title}
+      />
     </div>
   )
 }
