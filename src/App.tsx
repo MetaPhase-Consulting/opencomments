@@ -25,6 +25,7 @@ import AgencyDashboardNew from './pages/agency/AgencyDashboard';
 import DocketList from './pages/agency/DocketList';
 import DocketWizard from './pages/agency/DocketWizard';
 import DocketDetail from './pages/agency/DocketDetail';
+import ModerationQueue from './pages/agency/ModerationQueue';
 import Unauthorized from './pages/Unauthorized';
 
 function App() {
@@ -104,18 +105,12 @@ function App() {
             } />
             <Route path="/agency/moderation" element={
               <AgencyProtectedRoute>
-                <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Moderation</h1>
-                  <p className="text-gray-600">Comment moderation coming soon</p>
-                </div>
+                <ModerationQueue />
               </AgencyProtectedRoute>
             } />
             <Route path="/agency/moderation/queue" element={
               <AgencyProtectedRoute>
-                <div className="text-center py-12">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Review Queue</h1>
-                  <p className="text-gray-600">Comment review queue coming soon</p>
-                </div>
+                <ModerationQueue />
               </AgencyProtectedRoute>
             } />
             <Route path="/agency/moderation/flagged" element={
