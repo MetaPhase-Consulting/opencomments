@@ -30,6 +30,7 @@ import AgencySettings from './pages/agency/AgencySettings';
 import GlobalSearch from './pages/agency/GlobalSearch';
 import Reports from './pages/agency/Reports';
 import Unauthorized from './pages/Unauthorized';
+import Contact from './pages/Contact';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/accessibility" element={<Accessibility />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<PublicLogin />} />
             <Route path="/agency-login" element={<AgencyLogin />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
