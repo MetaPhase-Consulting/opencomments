@@ -27,7 +27,7 @@ interface ContactForm {
 }
 
 const Contact = () => {
-  const { user, profile } = useAuth()
+  const { user, profile } = useAuth();
   const [formData, setFormData] = useState<ContactForm>({
     name: profile?.full_name || '',
     email: user?.email || '',
@@ -35,10 +35,10 @@ const Contact = () => {
     subject: '',
     category: 'general_inquiry',
     message: ''
-  })
-  const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState('')
+  });
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const categories = [
     { value: 'technical_support', label: 'Technical Support', icon: HelpCircle },
@@ -52,19 +52,19 @@ const Contact = () => {
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
     try {
       // Validate required fields
       if (!formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
-        throw new Error('Please fill in all required fields')
+        throw new Error('Please fill in all required fields');
       }
 
       // Submit to database
@@ -80,11 +80,11 @@ const Contact = () => {
           message: formData.message.trim(),
           user_agent: navigator.userAgent,
           ip_address: null // Will be set by server if needed
-        })
+        });
 
       if (dbError) {
-        console.error('Database error:', dbError)
-        throw new Error('Failed to submit your message. Please try again.')
+        console.error('Database error:', dbError);
+        throw new Error('Failed to submit your message. Please try again.');
       }
 
       // Send email via edge function (placeholder for now)
@@ -98,24 +98,24 @@ const Contact = () => {
             category: formData.category,
             message: formData.message
           }
-        })
+        });
 
         if (emailError) {
-          console.warn('Email sending failed:', emailError)
+          console.warn('Email sending failed:', emailError);
           // Don't fail the submission if email fails
         }
       } catch (emailError) {
-        console.warn('Email function not available:', emailError)
+        console.warn('Email function not available:', emailError);
         // Continue with successful submission
       }
 
-      setSubmitted(true)
+      setSubmitted(true);
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred')
+      setError(err.message || 'An unexpected error occurred');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (submitted) {
     return (
@@ -158,7 +158,7 @@ const Contact = () => {
         </main>
         <Footer />
       </div>
-    )
+    );
   }
 
   return (
@@ -431,7 +431,9 @@ const Contact = () => {
       
       <Footer />
     </div>
-  )
-}
+  );
+};
 
-                  })
+export default Contact;
+
+export default Contact

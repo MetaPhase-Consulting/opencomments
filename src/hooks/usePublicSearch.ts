@@ -86,3 +86,5 @@ export const usePublicSearch = () => {
     searchDockets,
     loadMore,
     reset
+  }
+}
