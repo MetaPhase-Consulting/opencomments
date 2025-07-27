@@ -266,43 +266,36 @@ const CommentWizard = () => {
     setError(null);
 
     try {
-      // Get OAuth provider info if available
-      const oauthProvider = user.app_metadata?.provider || null;
-      const oauthUid = user.user_metadata?.provider_id || user.id;
+      // Generate tracking ID
+      const trackingId = `CMT-${Date.now().toString(36).toUpperCase()}`;
       
-      // Submit comment via authenticated RPC
-      const { data: result, error: submitError } = await supabase.rpc('submit_authenticated_comment', {
-        p_docket_slug: slug,
-        p_content: formData.content.trim(),
-        p_commenter_name: formData.name.trim() || null,
-        p_commenter_email: formData.email.trim() || null,
-        p_commenter_organization: formData.organization.trim() || null,
-        p_representation: formData.representation,
-        p_organization_name: formData.organizationName.trim() || null,
-        p_authorization_statement: formData.authorizationStatement.trim() || null,
-        p_perjury_certified: formData.perjuryCertified,
-        p_captcha_token: formData.captchaToken || null,
-        p_oauth_provider: oauthProvider,
-        p_oauth_uid: oauthUid,
-        p_ip_address: null, // Will be set by server if needed
-        p_user_agent: navigator.userAgent
-      });
+      // Submit comment
+      const { data: comment, error: submitError } = await supabase
+        .from('comments')
+        .insert({
+          docket_id: docket.id,
+          user_id: user.id,
+          content: formData.content.trim(),
+          commenter_name: formData.name.trim() || null,
+          commenter_email: formData.email.trim() || null,
+          commenter_organization: formData.organization.trim() || null,
+          status: docket.auto_publish ? 'published' : 'submitted'
+        })
+        .select()
+        .single();
 
-      if (submitError || !result.success) {
+      if (submitError || !comment) {
         console.error('Submit error:', submitError);
-        setError(result?.error || 'Failed to submit comment. Please try again.');
+        setError('Failed to submit comment. Please try again.');
         return;
       }
-
-      const commentId = result.comment_id;
-      const trackingId = result.tracking_id;
 
       // Upload files if any
       if (formData.files.length > 0) {
         for (const file of formData.files) {
           const fileExtension = file.name.split('.').pop();
           const fileName = `${crypto.randomUUID()}.${fileExtension}`;
-          const filePath = `authenticated/docket/${docket.id}/${commentId}/${fileName}`;
+          const filePath = `public/docket/${docket.id}/${comment.id}/${fileName}`;
 
           // Upload to storage
           const { error: uploadError } = await supabase.storage
@@ -311,7 +304,6 @@ const CommentWizard = () => {
 
           if (uploadError) {
             console.error('File upload error:', uploadError);
-            // Continue with submission even if file upload fails
             continue;
           }
 
@@ -324,13 +316,11 @@ const CommentWizard = () => {
           await supabase
             .from('comment_attachments')
             .insert({
-              comment_id: commentId,
+              comment_id: comment.id,
               filename: file.name,
               file_url: urlData.publicUrl,
-              file_path: filePath,
-              file_path: filePath,
-              mime_type: file.type,
-              file_size: file.size
+              file_size: file.size,
+              mime_type: file.type
             });
         }
       }
@@ -564,7 +554,7 @@ const CommentWizard = () => {
                   value={formData.content}
                   onChange={(e) => updateFormData('content', e.target.value)}
                   rows={12}
-                  maxLength={maxCharacters}
+                  maxLength={docket?.max_comment_length || 4000}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your detailed comment here..."
                   required
