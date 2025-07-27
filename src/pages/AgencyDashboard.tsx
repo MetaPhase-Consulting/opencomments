@@ -13,8 +13,12 @@ import {
   Settings,
   LogOut,
   Building2,
-  TrendingUp
+  TrendingUp,
+  Shield
 } from 'lucide-react'
+import { usePermissions } from '../hooks/usePermissions'
+import { PermissionGate, PermissionButton } from '../components/PermissionGate'
+import { RoleBadge } from '../components/RoleBadge'
 
 interface Docket {
   id: string
@@ -35,6 +39,7 @@ interface DashboardStats {
 
 const AgencyDashboard = () => {
   const { user, profile, signOut } = useAuth()
+  const { userRole, currentMembership } = usePermissions(user?.id) // Using user ID as agency ID for now
   const [dockets, setDockets] = useState<Docket[]>([])
   const [stats, setStats] = useState<DashboardStats>({
     total_dockets: 0,
@@ -185,9 +190,12 @@ const AgencyDashboard = () => {
                 <h1 className="text-2xl font-bold text-gray-900">
                   {profile?.agency_name || 'Agency Dashboard'}
                 </h1>
-                <p className="text-gray-600">
-                  Welcome back, {profile?.full_name || user?.email}
-                </p>
+                <div className="flex items-center space-x-3 mt-1">
+                  <p className="text-gray-600">
+                    Welcome back, {profile?.full_name || user?.email}
+                  </p>
+                  {userRole && <RoleBadge role={userRole} size="sm" />}
+                </div>
               </div>
             </div>
             <button
@@ -219,7 +227,8 @@ const AgencyDashboard = () => {
                 <TrendingUp className="w-4 h-4 inline mr-2" />
                 Overview
               </button>
-              <button
+              <PermissionButton
+                permission="create_thread"
                 onClick={() => setActiveTab('dockets')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'dockets'
@@ -233,7 +242,7 @@ const AgencyDashboard = () => {
               >
                 <FileText className="w-4 h-4 inline mr-2" />
                 Dockets ({dockets.length})
-              </button>
+              </PermissionButton>
               <button
                 onClick={() => setActiveTab('comments')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -249,6 +258,23 @@ const AgencyDashboard = () => {
                 <MessageSquare className="w-4 h-4 inline mr-2" />
                 Comments ({stats.total_comments})
               </button>
+              <PermissionGate permission="invite_users">
+                <button
+                  onClick={() => setActiveTab('team')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'team'
+                      ? 'text-white border-red-500'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                  style={{
+                    color: activeTab === 'team' ? '#D9253A' : undefined,
+                    borderColor: activeTab === 'team' ? '#D9253A' : undefined
+                  }}
+                >
+                  <Users className="w-4 h-4 inline mr-2" />
+                  Team
+                </button>
+              </PermissionGate>
               <button
                 onClick={() => setActiveTab('settings')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -377,13 +403,14 @@ const AgencyDashboard = () => {
                     <p className="text-gray-600 mb-4">
                       Create your first docket to start collecting public comments
                     </p>
-                    <button
+                    <PermissionButton
+                      permission="create_thread"
                       className="inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-md transition-colors hover:bg-red-700"
                       style={{ backgroundColor: '#D9253A' }}
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Create Docket
-                    </button>
+                    </PermissionButton>
                   </div>
                 )}
               </div>
@@ -396,13 +423,14 @@ const AgencyDashboard = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">Manage Dockets</h2>
-                <button
+                <PermissionButton
+                  permission="create_thread"
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-md transition-colors hover:bg-red-700"
                   style={{ backgroundColor: '#D9253A' }}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create New Docket
-                </button>
+                </PermissionButton>
               </div>
             </div>
             
@@ -455,6 +483,44 @@ const AgencyDashboard = () => {
           </div>
         )}
 
+        {activeTab === 'team' && (
+          <PermissionGate 
+            permission="invite_users"
+            fallback={
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
+                <p className="text-gray-600">You don't have permission to manage team members</p>
+              </div>
+            }
+          >
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Team Management</h2>
+                <p className="text-gray-600 mt-1">Manage roles and permissions for your agency</p>
+              </div>
+              
+              <div className="p-8 text-center">
+                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Team management coming soon</h3>
+                <p className="text-gray-600 mb-4">
+                  This feature will allow you to invite team members and manage their roles
+                </p>
+                <div className="text-sm text-gray-500">
+                  <p className="mb-2">Available roles:</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <RoleBadge role="owner" size="sm" />
+                    <RoleBadge role="admin" size="sm" />
+                    <RoleBadge role="manager" size="sm" />
+                    <RoleBadge role="reviewer" size="sm" />
+                    <RoleBadge role="viewer" size="sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </PermissionGate>
+        )}
+
         {activeTab === 'settings' && (
           <div className="bg-white rounded-lg shadow-sm">
             <div className="p-6 border-b border-gray-200">
@@ -502,12 +568,13 @@ const AgencyDashboard = () => {
                   </div>
                   
                   <div className="pt-4">
-                    <button
+                    <PermissionButton
+                      permission="edit_agency_settings"
                       className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors hover:bg-red-700"
                       style={{ backgroundColor: '#D9253A' }}
                     >
                       Update Settings
-                    </button>
+                    </PermissionButton>
                   </div>
                 </div>
               </div>
