@@ -123,7 +123,7 @@ const Hero = () => {
                 type="submit"
                 className="inline-flex items-center px-6 py-2 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                Search
+                Search Comments
               </button>
             </div>
             
@@ -272,17 +272,6 @@ const Hero = () => {
             )}
           </form>
         </div>
-
-        {/* Call to Action Buttons */}
-        <div className="flex justify-center">
-          <a
-            href="/dockets"
-            className="inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-blue-800"
-            style={{ backgroundColor: '#0050D8' }}
-          >
-            Browse All Dockets
-          </a>
-        </div>
         
         {/* Commenting Information */}
         <div className="mt-12 max-w-3xl mx-auto">
@@ -300,7 +289,7 @@ const Hero = () => {
                   Submit Official Comments
                 </h3>
                 <p className="text-gray-700 mb-4">
-                  Comments are submitted on specific dockets (comment periods). First find the docket you want to comment on, then create an account to submit your official comment.
+                  Public comments can be submitted on specific agency dockets for proposed govenment actions. First find the docket you want to comment on, then create a citizen account to submit your comment.
                 </p>
                 <a
                   href="/dockets"
