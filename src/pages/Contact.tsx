@@ -48,12 +48,11 @@ const Contact = () => {
 
   const categories = [
     { value: 'technical_support', label: 'Technical Support', icon: HelpCircle },
-    { value: 'account_access', label: 'Account Access Issues', icon: HelpCircle },
+    { value: 'account_access', label: 'Login Issues', icon: HelpCircle },
     { value: 'agency_onboarding', label: 'Agency Onboarding', icon: HelpCircle },
     { value: 'feature_request', label: 'Feature Request', icon: HelpCircle },
     { value: 'bug_report', label: 'Bug Report', icon: AlertCircle },
     { value: 'training_request', label: 'Training Request', icon: HelpCircle },
-    { value: 'billing_question', label: 'Billing Question', icon: Mail },
     { value: 'general_inquiry', label: 'General Inquiry', icon: Mail }
   ];
 
