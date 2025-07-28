@@ -4,49 +4,55 @@ import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SecurityBanner from '../components/SecurityBanner';
+import HCaptchaComponent from '../components/HCaptcha';
 import { 
   Mail, 
-  Phone, 
-  MapPin, 
   Send, 
   CheckCircle, 
   AlertCircle,
-  MessageSquare,
-  Clock,
-  Users,
   HelpCircle
 } from 'lucide-react'
 
 interface ContactForm {
+  userType: string
   name: string
   email: string
   organization: string
   subject: string
   category: string
   message: string
+  captchaToken: string
 }
 
 const Contact = () => {
   const { user, profile } = useAuth()
   const [formData, setFormData] = useState<ContactForm>({
+    userType: '',
     name: profile?.full_name || '',
     email: user?.email || '',
     organization: profile?.agency_name || '',
     subject: '',
     category: 'general_inquiry',
-    message: ''
+    message: '',
+    captchaToken: ''
   })
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
 
+  const userTypeOptions = [
+    { value: '', label: 'Select user type...' },
+    { value: 'citizen', label: 'Citizen/Public User' },
+    { value: 'government', label: 'Government/Agency User' }
+  ];
+
   const categories = [
     { value: 'technical_support', label: 'Technical Support', icon: HelpCircle },
-    { value: 'account_access', label: 'Account Access Issues', icon: Users },
-    { value: 'agency_setup', label: 'Agency Setup Help', icon: MapPin },
-    { value: 'feature_request', label: 'Feature Request', icon: MessageSquare },
+    { value: 'account_access', label: 'Account Access Issues', icon: HelpCircle },
+    { value: 'agency_onboarding', label: 'Agency Onboarding', icon: HelpCircle },
+    { value: 'feature_request', label: 'Feature Request', icon: HelpCircle },
     { value: 'bug_report', label: 'Bug Report', icon: AlertCircle },
-    { value: 'training_request', label: 'Training Request', icon: Clock },
+    { value: 'training_request', label: 'Training Request', icon: HelpCircle },
     { value: 'billing_question', label: 'Billing Question', icon: Mail },
     { value: 'general_inquiry', label: 'General Inquiry', icon: Mail }
   ];
@@ -63,8 +69,12 @@ const Contact = () => {
 
     try {
       // Validate required fields
-      if (!formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
+      if (!formData.userType || !formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
         throw new Error('Please fill in all required fields')
+      }
+
+      if (!formData.captchaToken) {
+        throw new Error('Please complete the CAPTCHA verification')
       }
 
       // Submit to database
@@ -72,6 +82,7 @@ const Contact = () => {
         .from('contact_submissions')
         .insert({
           user_id: user?.id || null,
+          user_type: formData.userType,
           name: formData.name.trim(),
           email: formData.email.trim(),
           organization: formData.organization.trim() || null,
@@ -93,6 +104,7 @@ const Contact = () => {
           body: {
             name: formData.name,
             email: formData.email,
+            userType: formData.userType,
             organization: formData.organization,
             subject: formData.subject,
             category: formData.category,
@@ -138,12 +150,14 @@ const Contact = () => {
                 onClick={() => {
                   setSubmitted(false);
                   setFormData({
+                    userType: '',
                     name: profile?.full_name || '',
                     email: user?.email || '',
                     organization: profile?.agency_name || '',
                     subject: '',
                     category: 'general_inquiry',
-                    message: ''
+                    message: '',
+                    captchaToken: ''
                   });
                 }}
                 className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors"
@@ -174,188 +188,217 @@ const Contact = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Contact Information */}
-          <div className="lg:col-span-1">
-            <div className="bg-blue-50 rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Get in Touch</h2>
+
+
+
+        {/* Contact Form */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="bg-white shadow-lg rounded-lg p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Send us a Message</h2>
               
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <Mail className="w-5 h-5 text-blue-600 mt-1 mr-3" />
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Email Support</h3>
-                    <p className="text-sm text-gray-600">
-                      <a href="mailto:support@opencomments.us" className="text-blue-700 hover:text-blue-800 underline">
-                        support@opencomments.us
-                      </a>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Response within 1-2 business days</p>
-                  </div>
-                </div>
-
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-blue-200">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Links</h3>
-                <div className="space-y-2">
-                  <a href="/help" className="block text-sm text-blue-700 hover:text-blue-800 underline">
-                    Help Center
-                  </a>
-                  <a href="/api" className="block text-sm text-blue-700 hover:text-blue-800 underline">
-                    API Documentation
-                  </a>
-                  <a href="/training" className="block text-sm text-blue-700 hover:text-blue-800 underline">
-                    Training Resources
-                  </a>
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                  <span className="text-sm text-red-600">{error}</span>
                 </div>
               </div>
-            </div>
+            )}
+
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-1">
+                  I am a <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="userType"
+                  name="userType"
+                  value={formData.userType}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {userTypeOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Your full name"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">
+                  Organization
+                </label>
+                <input
+                  type="text"
+                  id="organization"
+                  name="organization"
+                  value={formData.organization}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Your organization or agency"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Brief description of your inquiry"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                  Message <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  required
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Please provide details about your inquiry..."
+                />
+              </div>
+
+              {/* CAPTCHA */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Security Verification <span className="text-red-500">*</span>
+                </label>
+                <HCaptchaComponent
+                  onVerify={(token) => {
+                    setFormData(prev => ({ ...prev, captchaToken: token }));
+                    setError('');
+                  }}
+                  onError={(error) => {
+                    setFormData(prev => ({ ...prev, captchaToken: '' }));
+                    setError('CAPTCHA verification failed. Please try again.');
+                  }}
+                  onExpire={() => {
+                    setFormData(prev => ({ ...prev, captchaToken: '' }));
+                    setError('CAPTCHA expired. Please verify again.');
+                  }}
+                  size="normal"
+                  theme="light"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => window.history.back()}
+                  className="px-6 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !formData.captchaToken}
+                  className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Message
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
+        </div>
 
-          {/* Contact Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-white shadow-lg rounded-lg p-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Send us a Message</h2>
-              
-              {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-center">
-                    <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-                    <span className="text-sm text-red-600">{error}</span>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Your full name"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="your.email@example.com"
-                    />
-                  </div>
-                </div>
-
+        {/* Alternative Contact Methods */}
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-blue-50 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Additional Support Options</h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <Mail className="w-5 h-5 text-blue-600 mt-1 mr-3" />
                 <div>
-                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    id="organization"
-                    name="organization"
-                    value={formData.organization}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Your organization or agency"
-                  />
+                  <h3 className="text-sm font-medium text-gray-900">Email Support</h3>
+                  <p className="text-sm text-gray-600">
+                    <a href="mailto:support@opencomments.us" className="text-blue-700 hover:text-blue-800 underline">
+                      support@opencomments.us
+                    </a>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Response within 1-2 business days</p>
                 </div>
-
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {categories.map(cat => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                    Subject <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Brief description of your inquiry"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Message <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    required
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Please provide details about your inquiry..."
-                  />
-                </div>
-
-                <div className="flex items-center justify-end space-x-4">
-                  <button
-                    type="button"
-                    onClick={() => window.history.back()}
-                    className="px-6 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Send Message
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>
