@@ -123,7 +123,7 @@ const Hero = () => {
                 type="submit"
                 className="inline-flex items-center px-6 py-2 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                Search
+                Search Comments
               </button>
             </div>
             
