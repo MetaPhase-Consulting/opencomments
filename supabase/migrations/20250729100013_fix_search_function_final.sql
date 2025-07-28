@@ -1,8 +1,19 @@
--- 2025-07-29 10:00:11 Fix Search Functions with Total Count
+-- 2025-07-29 10:00:13 Final Fix for Search Function
 
--- Drop existing functions first
-DROP FUNCTION IF EXISTS search_comments(text, text, text, text[], timestamptz, timestamptz, text, text, text, text, text, text, text, integer, integer);
-DROP FUNCTION IF EXISTS browse_public_dockets(text, text, text, text, text[], timestamptz, timestamptz, text, integer, integer);
+-- Drop all versions of search_comments function using a DO block
+DO $$
+DECLARE
+    func_record RECORD;
+BEGIN
+    FOR func_record IN 
+        SELECT proname, oid::regprocedure as full_name
+        FROM pg_proc 
+        WHERE proname = 'search_comments' 
+        AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+    LOOP
+        EXECUTE 'DROP FUNCTION IF EXISTS ' || func_record.full_name || ' CASCADE';
+    END LOOP;
+END $$;
 
 -- Recreate search_comments function with total count
 CREATE OR REPLACE FUNCTION search_comments(
@@ -131,114 +142,5 @@ BEGIN
 END;
 $$;
 
--- Recreate browse_public_dockets function with total count
-CREATE OR REPLACE FUNCTION browse_public_dockets(
-  p_query text DEFAULT NULL,
-  p_agency_name text DEFAULT NULL,
-  p_state text DEFAULT NULL,
-  p_status text DEFAULT 'open',
-  p_tags text[] DEFAULT NULL,
-  p_date_from timestamptz DEFAULT NULL,
-  p_date_to timestamptz DEFAULT NULL,
-  p_sort_by text DEFAULT 'newest',
-  p_limit integer DEFAULT 10,
-  p_offset integer DEFAULT 0
-)
-RETURNS TABLE (
-  id uuid,
-  title text,
-  slug text,
-  summary text,
-  agency_name text,
-  agency_jurisdiction text,
-  status text,
-  comment_count bigint,
-  open_at timestamptz,
-  close_at timestamptz,
-  tags text[],
-  total_count bigint
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  ts_query tsquery := CASE WHEN p_query IS NOT NULL AND trim(p_query) <> ''
-                           THEN plainto_tsquery('english', p_query)
-                           ELSE NULL END;
-  wildcard_query text := CASE WHEN p_query IS NOT NULL AND trim(p_query) <> ''
-                              THEN '%' || p_query || '%'
-                              ELSE NULL END;
-BEGIN
-  RETURN QUERY
-  WITH filtered_dockets AS (
-    SELECT d.id
-    FROM
-      dockets d
-    JOIN
-      agencies a ON d.agency_id = a.id
-    WHERE
-      (p_status IS NULL OR d.status::text = p_status)
-      AND (p_agency_name IS NULL OR a.name ILIKE ('%' || p_agency_name || '%'))
-      AND (p_state IS NULL OR a.jurisdiction ILIKE p_state)
-      AND (p_tags IS NULL OR d.tags && p_tags)
-      AND (p_date_from IS NULL OR d.created_at >= p_date_from)
-      AND (p_date_to IS NULL OR d.created_at <= p_date_to)
-      AND (
-        p_query IS NULL 
-        OR (
-          -- Full-text search for smart features (fuzzy matching, relevance)
-          (ts_query IS NOT NULL AND d.search_vector @@ ts_query)
-          OR
-          -- Partial word matching for immediate results (AND logic)
-          (
-            SELECT bool_and(
-              d.title ILIKE '%' || word || '%' OR
-              d.summary ILIKE '%' || word || '%' OR
-              d.description ILIKE '%' || word || '%' OR
-              a.name ILIKE '%' || word || '%' OR
-              a.jurisdiction ILIKE '%' || word || '%'
-            )
-            FROM unnest(string_to_array(p_query, ' ')) AS word
-            WHERE word != ''
-          )
-        )
-      )
-  ),
-  total_count AS (
-    SELECT COUNT(*) as total FROM filtered_dockets
-  )
-  SELECT
-    d.id,
-    d.title,
-    d.slug,
-    d.summary,
-    a.name,
-    a.jurisdiction,
-    d.status::text,
-    (SELECT COUNT(*) FROM comments c WHERE c.docket_id = d.id AND c.status = 'approved'),
-    d.open_at,
-    d.close_at,
-    d.tags,
-    tc.total
-  FROM
-    dockets d
-  JOIN
-    agencies a ON d.agency_id = a.id
-  JOIN
-    filtered_dockets fd ON fd.id = d.id
-  CROSS
-    JOIN total_count tc
-  ORDER BY
-    CASE WHEN p_sort_by = 'newest' THEN d.created_at END DESC,
-    CASE WHEN p_sort_by = 'oldest' THEN d.created_at END ASC,
-    CASE WHEN p_sort_by = 'title_asc' THEN d.title END ASC,
-    CASE WHEN p_sort_by = 'title_desc' THEN d.title END DESC,
-    CASE WHEN p_sort_by = 'agency_asc' THEN a.name END ASC,
-    CASE WHEN p_sort_by = 'agency_desc' THEN a.name END DESC,
-    CASE WHEN p_sort_by = 'closing_soon' THEN d.close_at END ASC
-  LIMIT p_limit OFFSET p_offset;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION search_comments TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION browse_public_dockets TO anon, authenticated; 
+-- Grant permissions
+GRANT EXECUTE ON FUNCTION search_comments TO anon, authenticated; 
