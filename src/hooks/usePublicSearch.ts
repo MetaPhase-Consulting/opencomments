@@ -23,6 +23,11 @@ export interface SearchFilters {
 }
 
 export const usePublicSearch = () => {
+  const [dockets, setDockets] = useState<PublicDocket[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(true)
+  const [total, setTotal] = useState(0)
 
   const searchDockets = useCallback(async (filters: SearchFilters = {}) => {
     setLoading(true)
