@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useCommentSearch, CommentSearchFilters } from '../../hooks/useCommentSearch'
 import PublicLayout from '../../components/PublicLayout'
@@ -18,17 +18,67 @@ import {
 
 const CommentSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const query = searchParams.get('q') || ''
+  const query = (() => {
+    const q = searchParams.get('q')
+    return q && q.length <= 500 ? q : ''
+  })()
   const { results, loading, error, hasMore, total, searchComments, loadMore, reset } = useCommentSearch()
   
   const [filters, setFilters] = useState<CommentSearchFilters>({
     query: query,
-    sort_by: 'newest',
-    limit: 20,
-    offset: 0
+    sort_by: (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'agency', 'docket'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })(),
+    limit: Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10)),
+    offset: Math.max(0, parseInt(searchParams.get('offset') || '0') || 0),
+    agency_name: (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })(),
+    state: (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })(),
+    comment_filter: (() => {
+      const filter = searchParams.get('comment_filter')
+      return filter && filter.length <= 200 ? filter : undefined
+    })(),
+    filing_company: (() => {
+      const company = searchParams.get('filing_company')
+      return company && company.length <= 200 ? company : undefined
+    })(),
+    comment_id: (() => {
+      const id = searchParams.get('comment_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })(),
+    docket_id: (() => {
+      const id = searchParams.get('docket_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })(),
+    date_from: (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })(),
+    date_to: (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })(),
+    commenter_type: (() => {
+      const type = searchParams.get('commenter_type')
+      const validTypes = ['individual', 'organization', 'agent', 'anonymous'] as const
+      return validTypes.includes(type as any) ? (type as any) : undefined
+    })(),
+    position: (() => {
+      const pos = searchParams.get('position')
+      const validPositions = ['support', 'oppose', 'neutral', 'unclear', 'not_specified'] as const
+      return validPositions.includes(pos as any) ? (pos as any) : undefined
+    })()
   })
   
   const [showFilters, setShowFilters] = useState(false)
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
 
   // Available filter options
   const stateOptions = [
@@ -65,31 +115,127 @@ const CommentSearch = () => {
   ]
 
   useEffect(() => {
-    if (query) {
-      const searchFilters = { ...filters, query, offset: 0 }
-      setFilters(searchFilters)
-      reset()
-      searchComments(searchFilters)
-    } else {
-      // Show all results if no query
-      const searchFilters = { ...filters, offset: 0 }
-      reset()
-      searchComments(searchFilters)
+    // Handle URL parameter changes
+    const urlQuery = (() => {
+      const q = searchParams.get('q')
+      return q && q.length <= 500 ? q : ''
+    })()
+    const urlSort = (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'agency', 'docket'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })()
+    const urlLimit = Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10))
+    const urlOffset = Math.max(0, parseInt(searchParams.get('offset') || '0') || 0)
+    const urlAgency = (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })()
+    const urlState = (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })()
+    const urlCommentFilter = (() => {
+      const filter = searchParams.get('comment_filter')
+      return filter && filter.length <= 200 ? filter : undefined
+    })()
+    const urlFilingCompany = (() => {
+      const company = searchParams.get('filing_company')
+      return company && company.length <= 200 ? company : undefined
+    })()
+    const urlCommentId = (() => {
+      const id = searchParams.get('comment_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })()
+    const urlDocketId = (() => {
+      const id = searchParams.get('docket_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })()
+    const urlDateFrom = (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
+    const urlDateTo = (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
+    const urlCommenterType = (() => {
+      const type = searchParams.get('commenter_type')
+      const validTypes = ['individual', 'organization', 'agent', 'anonymous'] as const
+      return validTypes.includes(type as any) ? (type as any) : undefined
+    })()
+    const urlPosition = (() => {
+      const pos = searchParams.get('position')
+      const validPositions = ['support', 'oppose', 'neutral', 'unclear', 'not_specified'] as const
+      return validPositions.includes(pos as any) ? (pos as any) : undefined
+    })()
+
+    const newFilters = {
+      query: urlQuery,
+      sort_by: urlSort,
+      limit: urlLimit,
+      offset: urlOffset,
+      agency_name: urlAgency,
+      state: urlState,
+      comment_filter: urlCommentFilter,
+      filing_company: urlFilingCompany,
+      comment_id: urlCommentId,
+      docket_id: urlDocketId,
+      date_from: urlDateFrom,
+      date_to: urlDateTo,
+      commenter_type: urlCommenterType,
+      position: urlPosition
     }
-  }, [query])
+    
+    setFilters(newFilters)
+    reset()
+    searchComments(newFilters)
+  }, [searchParams, reset, searchComments])
+
+  // Function to update URL with all parameters
+  const updateURL = useCallback((newFilters: CommentSearchFilters) => {
+    const newSearchParams = new URLSearchParams()
+    
+    if (newFilters.query) newSearchParams.set('q', newFilters.query)
+    if (newFilters.sort_by) newSearchParams.set('sort', newFilters.sort_by)
+    if (newFilters.limit) newSearchParams.set('limit', newFilters.limit.toString())
+    if (newFilters.offset) newSearchParams.set('offset', newFilters.offset.toString())
+    if (newFilters.agency_name) newSearchParams.set('agency', newFilters.agency_name)
+    if (newFilters.state) newSearchParams.set('state', newFilters.state)
+    if (newFilters.comment_filter) newSearchParams.set('comment_filter', newFilters.comment_filter)
+    if (newFilters.filing_company) newSearchParams.set('filing_company', newFilters.filing_company)
+    if (newFilters.comment_id) newSearchParams.set('comment_id', newFilters.comment_id)
+    if (newFilters.docket_id) newSearchParams.set('docket_id', newFilters.docket_id)
+    if (newFilters.date_from) newSearchParams.set('date_from', newFilters.date_from)
+    if (newFilters.date_to) newSearchParams.set('date_to', newFilters.date_to)
+    if (newFilters.commenter_type) newSearchParams.set('commenter_type', newFilters.commenter_type)
+    if (newFilters.position) newSearchParams.set('position', newFilters.position)
+    
+    setSearchParams(newSearchParams)
+  }, [setSearchParams])
+
+  // Debounced search function
+  const debouncedSearch = useCallback((query: string) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+
+    const timeout = setTimeout(() => {
+      const newFilters = { ...filters, query, offset: 0 }
+      setFilters(newFilters)
+      updateURL(newFilters)
+      reset()
+      searchComments(newFilters)
+    }, 150) // 150ms delay
+
+    setSearchTimeout(timeout)
+  }, [filters, searchComments, reset, updateURL])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const newFilters = { ...filters, offset: 0 }
     setFilters(newFilters)
-    
-    // Update URL with search query
-    const newSearchParams = new URLSearchParams()
-    if (newFilters.query) {
-      newSearchParams.set('q', newFilters.query)
-    }
-    setSearchParams(newSearchParams)
-    
+    updateURL(newFilters)
     reset()
     searchComments(newFilters)
   }
@@ -97,15 +243,26 @@ const CommentSearch = () => {
   const handleFilterChange = (key: keyof CommentSearchFilters, value: any) => {
     const newFilters = { ...filters, [key]: value, offset: 0 }
     setFilters(newFilters)
-    reset()
-    searchComments(newFilters)
+    updateURL(newFilters)
+    
+    // For text fields, use debounced search
+    const textFields = ['agency_name', 'comment_filter', 'filing_company', 'comment_id', 'docket_id']
+    if (textFields.includes(key) && typeof value === 'string') {
+      // Search immediately for text fields
+      reset()
+      searchComments(newFilters)
+    } else {
+      // For non-text fields (dropdowns, etc.), search immediately
+      reset()
+      searchComments(newFilters)
+    }
   }
 
 
   const clearFilters = () => {
-    const newFilters = { query: '', sort_by: 'newest' as const, limit: 20, offset: 0 }
+    const newFilters = { query: '', sort_by: 'newest' as const, limit: 10, offset: 0 }
     setFilters(newFilters)
-    setSearchParams(new URLSearchParams())
+    updateURL(newFilters)
     reset()
     searchComments(newFilters)
   }
@@ -188,27 +345,95 @@ const CommentSearch = () => {
   const highlightText = (text: string, query?: string) => {
     if (!query || !text) return text
     
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-    const parts = text.split(regex)
+    // Sanitize the query to prevent regex injection
+    const sanitizedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     
-    return parts.map((part, index) => 
-      regex.test(part) ? (
-        <mark key={index} className="bg-yellow-200 px-1 rounded">
-          {part}
-        </mark>
-      ) : part
-    )
+    try {
+      const regex = new RegExp(`(${sanitizedQuery})`, 'gi')
+      const parts = text.split(regex)
+      
+      return parts.map((part, index) => 
+        regex.test(part) ? (
+          <mark key={index} className="bg-yellow-200">
+            {part}
+          </mark>
+        ) : part
+      )
+    } catch (error) {
+      // If regex creation fails, return original text
+      console.warn('Invalid search query for highlighting:', query)
+      return text
+    }
+  }
+
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc',
+      'Federal': 'us'
+    }
+    return stateAbbreviations[stateName] || 'us'
   }
 
   const hasActiveFilters = () => {
-    return !!(filters.agency_name || filters.state || filters.tags?.length || 
-              filters.date_from || filters.date_to || filters.commenter_type || 
-              filters.position)
+    return !!(filters.agency_name || filters.state || filters.comment_filter || 
+              filters.filing_company || filters.comment_id || filters.docket_id ||
+              filters.tags?.length || filters.date_from || filters.date_to || 
+              filters.commenter_type || filters.position)
   }
 
   return (
     <PublicLayout 
-      title={`Search Public Comments${query ? ` for "${query}"` : ''} - OpenComments`}
+      title="Search Public Comments - OpenComments"
       description="Search through public comments submitted on government proposals"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -216,9 +441,6 @@ const CommentSearch = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Search Public Comments
-            {query && (
-              <span className="text-gray-600 font-normal"> for "{query}"</span>
-            )}
           </h1>
           <p className="text-lg text-gray-600">
             Search through public comments submitted on government proposals and policy changes.
@@ -236,7 +458,13 @@ const CommentSearch = () => {
               <input
                 type="search"
                 value={filters.query || ''}
-                onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
+                onChange={(e) => {
+                  const query = e.target.value
+                  setFilters(prev => ({ ...prev, query }))
+                  
+                  // Trigger real-time search immediately
+                  debouncedSearch(query)
+                }}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                 placeholder="Search public comments..."
                 aria-label="Search public comments"
@@ -302,7 +530,65 @@ const CommentSearch = () => {
                     </select>
                   </div>
 
-                  {/* Date From and To - Row 2 */}
+                  {/* Comment Filter and Filing Company - Row 2 */}
+                  <div>
+                    <label htmlFor="comment_filter" className="block text-xs font-medium text-gray-700 mb-1">
+                      Comment Filter
+                    </label>
+                    <input
+                      type="text"
+                      id="comment_filter"
+                      value={filters.comment_filter || ''}
+                      onChange={(e) => handleFilterChange('comment_filter', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Commenter name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="filing_company" className="block text-xs font-medium text-gray-700 mb-1">
+                      Filing Company
+                    </label>
+                    <input
+                      type="text"
+                      id="filing_company"
+                      value={filters.filing_company || ''}
+                      onChange={(e) => handleFilterChange('filing_company', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Company name"
+                    />
+                  </div>
+
+                  {/* Comment ID and Docket ID - Row 3 */}
+                  <div>
+                    <label htmlFor="comment_id" className="block text-xs font-medium text-gray-700 mb-1">
+                      Comment ID
+                    </label>
+                    <input
+                      type="text"
+                      id="comment_id"
+                      value={filters.comment_id || ''}
+                      onChange={(e) => handleFilterChange('comment_id', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Comment ID"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="docket_id" className="block text-xs font-medium text-gray-700 mb-1">
+                      Docket ID
+                    </label>
+                    <input
+                      type="text"
+                      id="docket_id"
+                      value={filters.docket_id || ''}
+                      onChange={(e) => handleFilterChange('docket_id', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Docket ID"
+                    />
+                  </div>
+
+                  {/* Date From and To - Row 4 */}
                   <div>
                     <label htmlFor="date_from" className="block text-xs font-medium text-gray-700 mb-1">
                       From Date
@@ -429,7 +715,7 @@ const CommentSearch = () => {
         {!loading && results.length > 0 && (
           <div className="mb-6 flex items-center justify-between">
             <p className="text-gray-600">
-              Showing {results.length} {results.length === 1 ? 'comment' : 'comments'}
+              Found {total} {total === 1 ? 'comment' : 'comments'}
               {filters.query && ` for "${filters.query}"`}
             </p>
             <div className="flex items-center space-x-2">
@@ -508,28 +794,47 @@ const CommentSearch = () => {
         {results.length > 0 && (
           <div className="space-y-6 mb-8">
             {results.map((result) => (
-              <div key={result.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div key={result.id} className="bg-gray-50 border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                 <div className="space-y-3">
                   {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-medium text-gray-900 mb-1">
+                      <div className="mb-2">
+                        <span className="text-sm font-medium text-gray-500">Docket: </span>
                         {result.docket_slug ? (
                           <Link 
                             to={`/dockets/${result.docket_slug}`}
-                            className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                            className="text-lg font-medium text-gray-900 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                           >
                             {result.docket_title}
                           </Link>
                         ) : (
-                          result.docket_title
+                          <span className="text-lg font-medium text-gray-900">
+                            {result.docket_title}
+                          </span>
                         )}
-                      </h3>
+                      </div>
                       <div className="flex items-center text-sm text-gray-600 space-x-4">
                         <div className="flex items-center">
-                          <Building2 className="w-4 h-4 mr-1" />
-                          {result.agency_name}
-                          {result.agency_jurisdiction && ` (${result.agency_jurisdiction})`}
+                          {result.agency_jurisdiction && (
+                            <Link 
+                              to={`/state/${getStateAbbreviation(result.agency_jurisdiction)}`}
+                              className="flex-shrink-0 mr-2"
+                              aria-label={`${result.agency_jurisdiction} state page`}
+                            >
+                              <img 
+                                src={`/states/flag-${getStateAbbreviation(result.agency_jurisdiction)}.svg`}
+                                alt={`${result.agency_jurisdiction} flag`}
+                                className="w-4 h-3 object-contain"
+                              />
+                            </Link>
+                          )}
+                          <Link 
+                            to={`/agencies/${result.agency_name.toLowerCase().replace(/\s+/g, '-')}`}
+                            className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                          >
+                            {result.agency_name}
+                          </Link>
                         </div>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
@@ -550,18 +855,43 @@ const CommentSearch = () => {
 
                   {/* Comment Snippet */}
                   <div className="text-gray-700">
-                    {result.snippet}
+                    <span className="text-sm font-medium text-gray-500">Comment: </span>
+                    {highlightText(result.snippet, filters.query)}
                   </div>
 
                   {/* Commenter Info */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-sm text-gray-600">
                       <User className="w-4 h-4 mr-1" />
-                      {result.commenter_name || 'Anonymous'}
+                      {result.commenter_name ? (
+                        <button
+                          onClick={() => {
+                            const newFilters = { ...filters, comment_filter: result.commenter_name, offset: 0 }
+                            setFilters(newFilters)
+                            reset()
+                            searchComments(newFilters)
+                          }}
+                          className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                        >
+                          {result.commenter_name}
+                        </button>
+                      ) : (
+                        'Anonymous'
+                      )}
                       {result.commenter_organization && (
                         <span className="ml-2">
-                          • {result.commenter_organization}
-                        </span>
+                          • <button
+                              onClick={() => {
+                                const newFilters = { ...filters, filing_company: result.commenter_organization, offset: 0 }
+                                setFilters(newFilters)
+                                reset()
+                                searchComments(newFilters)
+                              }}
+                              className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                            >
+                              {result.commenter_organization}
+                            </button>
+                          </span>
                       )}
                     </div>
                     
@@ -573,45 +903,85 @@ const CommentSearch = () => {
                       <FileText className="w-4 h-4 ml-1" />
                     </Link>
                   </div>
-
-                  {/* Tags */}
-                  {result.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {result.tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Load More */}
-        {hasMore && results.length > 0 && (
-          <div className="text-center">
-            <button
-              onClick={() => loadMore(filters)}
-              disabled={loading}
-              className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
-                  Loading...
-                </>
-              ) : (
-                'Load More Comments'
-              )}
-            </button>
+        {/* Pagination Controls */}
+        {results.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-gray-200">
+            {/* Results Summary */}
+            <div className="text-sm text-gray-600">
+              Showing comments {(filters.offset || 0) + 1}-{Math.min((filters.offset || 0) + results.length, total)} of {total}
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center space-x-2">
+              <label htmlFor="pageSize" className="text-sm text-gray-600">
+                Show:
+              </label>
+              <select
+                id="pageSize"
+                value={filters.limit || 10}
+                onChange={(e) => {
+                  const newLimit = parseInt(e.target.value)
+                  const newFilters = { ...filters, limit: newLimit, offset: 0 }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  searchComments(newFilters)
+                }}
+                className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="text-sm text-gray-600">per page</span>
+            </div>
+
+            {/* Pagination Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  const newOffset = Math.max(0, (filters.offset || 0) - (filters.limit || 10))
+                  const newFilters = { ...filters, offset: newOffset }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  searchComments(newFilters)
+                }}
+                disabled={loading || (filters.offset || 0) === 0}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <span className="text-sm text-gray-600">
+                Page {Math.floor((filters.offset || 0) / (filters.limit || 10)) + 1} of {Math.ceil(total / (filters.limit || 10))}
+              </span>
+              
+              <button
+                onClick={() => {
+                  const newOffset = (filters.offset || 0) + (filters.limit || 10)
+                  const newFilters = { ...filters, offset: newOffset }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  searchComments(newFilters)
+                }}
+                disabled={loading || !hasMore}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
+
+
       </div>
     </PublicLayout>
   )

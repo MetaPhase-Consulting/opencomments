@@ -493,21 +493,7 @@ const DocketDetail = () => {
                 </div>
               </div>
 
-              {docket.tags.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {docket.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+
 
               {docket.supportingDocs.length > 0 && (
                 <div>

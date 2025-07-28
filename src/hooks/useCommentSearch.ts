@@ -5,6 +5,10 @@ export interface CommentSearchFilters {
   query?: string
   agency_name?: string
   state?: string
+  comment_filter?: string
+  filing_company?: string
+  comment_id?: string
+  docket_id?: string
   tags?: string[]
   date_from?: string
   date_to?: string
@@ -33,6 +37,7 @@ export interface CommentSearchResult {
   tags: string[]
   attachment_count: number
   rank: number
+  total_count?: number
 }
 
 export interface CommentDetail {
@@ -83,8 +88,12 @@ export const useCommentSearch = () => {
         p_date_to: filters.date_to ? new Date(filters.date_to).toISOString() : null,
         p_commenter_type: filters.commenter_type || null,
         p_position: filters.position || null,
+        p_comment_filter: filters.comment_filter || null,
+        p_filing_company: filters.filing_company || null,
+        p_comment_id: filters.comment_id || null,
+        p_docket_id: filters.docket_id || null,
         p_sort_by: filters.sort_by || 'newest',
-        p_limit: filters.limit || 20,
+        p_limit: filters.limit || 10,
         p_offset: filters.offset || 0
       })
 
@@ -102,8 +111,13 @@ export const useCommentSearch = () => {
         setResults(prev => [...prev, ...searchResults])
       }
 
-      setHasMore(searchResults.length === (filters.limit || 20))
-      setTotal(prev => filters.offset === 0 ? searchResults.length : prev + searchResults.length)
+      setHasMore(searchResults.length === (filters.limit || 10))
+      // Use the total_count from the first result if available, otherwise fall back to previous logic
+      if (searchResults.length > 0 && searchResults[0].total_count !== undefined) {
+        setTotal(searchResults[0].total_count)
+      } else {
+        setTotal(prev => filters.offset === 0 ? searchResults.length : prev + searchResults.length)
+      }
 
     } catch (err) {
       console.error('Search error:', err)

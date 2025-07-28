@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAgencyProfile } from '../../hooks/usePublicBrowse'
 import PublicLayout from '../../components/PublicLayout'
+import Breadcrumb from '../../components/Breadcrumb'
 import { 
   Building2, 
   MapPin, 
@@ -32,6 +33,63 @@ const AgencyProfile = () => {
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc'
+    }
+    return stateAbbreviations[stateName] || stateName.toLowerCase().replace(/\s+/g, '-')
   }
 
   const getDaysRemaining = (closeDate?: string) => {
@@ -130,15 +188,12 @@ const AgencyProfile = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link
-            to="/dockets"
-            className="inline-flex items-center text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to All Dockets
-          </Link>
-        </div>
+        <Breadcrumb 
+          items={[
+            { label: agency?.jurisdiction || 'State', href: agency?.jurisdiction ? `/state/${getStateAbbreviation(agency.jurisdiction)}` : undefined },
+            { label: agency?.name || 'Agency', current: true }
+          ]}
+        />
 
         {/* Agency Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
@@ -304,22 +359,14 @@ const AgencyProfile = () => {
                         )}
                         <div className="flex items-center">
                           <MessageSquare className="w-4 h-4 mr-1" />
-                          {docket.comment_count} comments
+                          <Link 
+                            to={`/dockets/${docket.slug}#comments`}
+                            className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                          >
+                            {docket.comment_count} comments
+                          </Link>
                         </div>
                       </div>
-
-                      {docket.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {docket.tags.map(tag => (
-                            <span
-                              key={tag}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                     
                     <div className="flex items-center space-x-3 ml-6">

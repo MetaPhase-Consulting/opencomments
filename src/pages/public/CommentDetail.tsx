@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCommentDetail } from '../../hooks/useCommentSearch'
 import PublicLayout from '../../components/PublicLayout'
+import Breadcrumb from '../../components/Breadcrumb'
 import { 
   ChevronLeft, 
   Calendar, 
@@ -59,6 +60,63 @@ const CommentDetail = () => {
     }
   }
 
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc'
+    }
+    return stateAbbreviations[stateName] || stateName.toLowerCase().replace(/\s+/g, '-')
+  }
+
   if (loading) {
     return (
       <PublicLayout>
@@ -101,15 +159,13 @@ const CommentDetail = () => {
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to Search Results
-          </button>
-        </div>
+        <Breadcrumb 
+          items={[
+            { label: comment?.agency_jurisdiction || 'State', href: comment?.agency_jurisdiction ? `/state/${getStateAbbreviation(comment.agency_jurisdiction)}` : undefined },
+            { label: comment?.docket_title || 'Docket', href: comment?.docket_slug ? `/dockets/${comment.docket_slug}` : undefined },
+            { label: 'Comment', current: true }
+          ]}
+        />
 
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">

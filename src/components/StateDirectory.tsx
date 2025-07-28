@@ -62,8 +62,8 @@ const StateDirectory = () => {
   const handleStateSelect = (stateCode: string) => {
     setSelectedState(stateCode);
     setShowDropdown(false);
-    // Navigate to state subdomain
-    window.location.href = `https://${stateCode.toLowerCase()}.opencomments.us`;
+    // Navigate to state page
+    window.location.href = `/state/${stateCode.toLowerCase()}`;
   };
 
   // Flag-style coloring: Blue field (top-left) + Red/White stripes

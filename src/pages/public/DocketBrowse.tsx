@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { usePublicBrowse, DocketSearchFilters } from '../../hooks/usePublicBrowse'
 import PublicLayout from '../../components/PublicLayout'
 import { 
@@ -15,15 +15,45 @@ import {
 } from 'lucide-react'
 
 const DocketBrowse = () => {
-  const { dockets, loading, error, hasMore, browseDockets, loadMore, reset } = usePublicBrowse()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const query = (() => {
+    const q = searchParams.get('q')
+    return q && q.length <= 500 ? q : ''
+  })()
+  const { dockets, loading, error, hasMore, total, browseDockets, loadMore, reset } = usePublicBrowse()
   const [filters, setFilters] = useState<DocketSearchFilters>({
-    query: '',
-    status: 'all',
-    sort_by: 'newest',
-    limit: 20,
-    offset: 0
+    query: query,
+    status: (() => {
+      const status = searchParams.get('status')
+      const validStatuses = ['all', 'open', 'closed', 'upcoming'] as const
+      return validStatuses.includes(status as any) ? (status as any) : 'all'
+    })(),
+    sort_by: (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'title_asc', 'title_desc', 'agency_asc', 'agency_desc', 'closing_soon'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })(),
+    limit: Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10)),
+    offset: Math.max(0, parseInt(searchParams.get('offset') || '0') || 0),
+    agency_name: (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })(),
+    state: (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })(),
+    date_from: (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })(),
+    date_to: (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
   })
   const [showFilters, setShowFilters] = useState(false)
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
 
   // Available options
   const stateOptions = [
@@ -40,16 +70,104 @@ const DocketBrowse = () => {
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'oldest', label: 'Oldest First' },
+    { value: 'title_asc', label: 'A-Z (Title)' },
+    { value: 'title_desc', label: 'Z-A (Title)' },
+    { value: 'agency_asc', label: 'A-Z (Agency)' },
+    { value: 'agency_desc', label: 'Z-A (Agency)' },
+    { value: 'closing_soon', label: 'Closing Soon' },
   ]
 
+  // Function to update URL with all parameters
+  const updateURL = useCallback((newFilters: DocketSearchFilters) => {
+    const newSearchParams = new URLSearchParams()
+    
+    if (newFilters.query) newSearchParams.set('q', newFilters.query)
+    if (newFilters.sort_by) newSearchParams.set('sort', newFilters.sort_by)
+    if (newFilters.limit) newSearchParams.set('limit', newFilters.limit.toString())
+    if (newFilters.offset) newSearchParams.set('offset', newFilters.offset.toString())
+    if (newFilters.agency_name) newSearchParams.set('agency', newFilters.agency_name)
+    if (newFilters.state) newSearchParams.set('state', newFilters.state)
+    if (newFilters.date_from) newSearchParams.set('date_from', newFilters.date_from)
+    if (newFilters.date_to) newSearchParams.set('date_to', newFilters.date_to)
+    if (newFilters.status && newFilters.status !== 'all') newSearchParams.set('status', newFilters.status)
+    
+    setSearchParams(newSearchParams)
+  }, [setSearchParams])
+
+  // Debounced search function
+  const debouncedSearch = useCallback((query: string) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+
+    const timeout = setTimeout(() => {
+      const newFilters = { ...filters, query, offset: 0 }
+      setFilters(newFilters)
+      updateURL(newFilters)
+      reset()
+      browseDockets(newFilters)
+    }, 150) // 150ms delay
+
+    setSearchTimeout(timeout)
+  }, [filters, browseDockets, reset, updateURL])
+
   useEffect(() => {
-    browseDockets(filters)
-  }, [browseDockets])
+    // Handle URL parameter changes
+    const urlQuery = (() => {
+      const q = searchParams.get('q')
+      return q && q.length <= 500 ? q : ''
+    })()
+    const urlStatus = (() => {
+      const status = searchParams.get('status')
+      const validStatuses = ['all', 'open', 'closed', 'upcoming'] as const
+      return validStatuses.includes(status as any) ? (status as any) : 'all'
+    })()
+    const urlSort = (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'title_asc', 'title_desc', 'agency_asc', 'agency_desc', 'closing_soon'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })()
+    const urlLimit = Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10))
+    const urlOffset = Math.max(0, parseInt(searchParams.get('offset') || '0') || 0)
+    const urlAgency = (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })()
+    const urlState = (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })()
+    const urlDateFrom = (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
+    const urlDateTo = (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
+
+    const newFilters = {
+      query: urlQuery,
+      status: urlStatus,
+      sort_by: urlSort,
+      limit: urlLimit,
+      offset: urlOffset,
+      agency_name: urlAgency,
+      state: urlState,
+      date_from: urlDateFrom,
+      date_to: urlDateTo
+    }
+    
+    setFilters(newFilters)
+    reset()
+    browseDockets(newFilters)
+  }, [searchParams, reset, browseDockets])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const newFilters = { ...filters, offset: 0 }
     setFilters(newFilters)
+    updateURL(newFilters)
     reset()
     browseDockets(newFilters)
   }
@@ -57,8 +175,19 @@ const DocketBrowse = () => {
   const handleFilterChange = (key: keyof DocketSearchFilters, value: any) => {
     const newFilters = { ...filters, [key]: value, offset: 0 }
     setFilters(newFilters)
-    reset()
-    browseDockets(newFilters)
+    updateURL(newFilters)
+    
+    // For text fields, use debounced search
+    const textFields = ['agency_name', 'query']
+    if (textFields.includes(key) && typeof value === 'string') {
+      // Search immediately for text fields
+      reset()
+      browseDockets(newFilters)
+    } else {
+      // For non-text fields (dropdowns, etc.), search immediately
+      reset()
+      browseDockets(newFilters)
+    }
   }
 
   const clearFilters = () => {
@@ -66,10 +195,11 @@ const DocketBrowse = () => {
       query: '', 
       status: 'all' as const, 
       sort_by: 'newest' as const,
-      limit: 20, 
+      limit: 10, 
       offset: 0 
     }
     setFilters(newFilters)
+    updateURL(newFilters)
     reset()
     browseDockets(newFilters)
   }
@@ -129,6 +259,64 @@ const DocketBrowse = () => {
       }
     }
     return status.charAt(0).toUpperCase() + status.slice(1)
+  }
+
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc',
+      'Federal': 'us'
+    }
+    return stateAbbreviations[stateName] || 'us'
   }
 
   const hasActiveFilters = () => {
@@ -199,13 +387,12 @@ const DocketBrowse = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Browse Public Dockets
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Find and participate in open comment periods on government proposals, 
-            regulations, and policy changes that affect your community.
+          <p className="text-lg text-gray-600">
+            Find and participate in open comment periods on government proposals, regulations, and policy changes.
           </p>
         </div>
 
@@ -220,7 +407,13 @@ const DocketBrowse = () => {
               <input
                 type="search"
                 value={filters.query || ''}
-                onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
+                onChange={(e) => {
+                  const query = e.target.value
+                  setFilters(prev => ({ ...prev, query }))
+                  
+                  // Trigger real-time search immediately
+                  debouncedSearch(query)
+                }}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                 placeholder="Search by keyword, topic, or agency..."
                 aria-label="Search dockets"
@@ -310,63 +503,100 @@ const DocketBrowse = () => {
                       className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+
+                  {/* Status - Row 3 */}
+                  <div>
+                    <label htmlFor="status" className="block text-xs font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      id="status"
+                      value={filters.status || 'all'}
+                      onChange={(e) => handleFilterChange('status', e.target.value)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="open">Open</option>
+                      <option value="closed">Closed</option>
+                      <option value="upcoming">Upcoming</option>
+                    </select>
+                  </div>
                 </div>
+                
+                {/* Active Filter Chips */}
+                {hasActiveFilters() && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-gray-900">Active Filters</h3>
+                      <button
+                        onClick={clearFilters}
+                        className="text-sm text-blue-700 hover:text-blue-800"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {filters.query && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                          Search: "{filters.query}"
+                          <button
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, query: '' }))
+                              setSearchParams(new URLSearchParams())
+                            }}
+                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {getActiveFilterChips().map(chip => (
+                        <span key={chip.key} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                          {chip.label}: {chip.value}
+                          <button
+                            onClick={chip.onRemove}
+                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </form>
         </div>
         
-        {/* Active Filter Chips */}
-        {hasActiveFilters() && (
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-900">Active Filters</h3>
-              <button
-                onClick={clearFilters}
-                className="text-sm text-blue-700 hover:text-blue-800"
+
+
+        {/* Results Count & Sort */}
+        {!loading && dockets.length > 0 && (
+          <div className="mb-6 flex items-center justify-between">
+            <p className="text-gray-600">
+              Found {total} {total === 1 ? 'docket' : 'dockets'}
+              {filters.query && ` for "${filters.query}"`}
+            </p>
+            <div className="flex items-center space-x-2">
+              <label htmlFor="sort_by" className="text-sm font-medium text-gray-700">
+                Sort by:
+              </label>
+              <select
+                id="sort_by"
+                value={filters.sort_by}
+                onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
-                Clear all
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {getActiveFilterChips().map(chip => (
-                <span key={chip.key} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                  {chip.label}: {chip.value}
-                  <button
-                    onClick={chip.onRemove}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         )}
-
-        {/* Results Count & Sort */}
-        <div className="flex items-center justify-between mb-6">
-          {!loading && dockets.length > 0 ? (
-            <p className="text-gray-600">
-              Showing {dockets.length} {dockets.length === 1 ? 'docket' : 'dockets'}
-            </p>
-          ) : (
-            <div></div> // Placeholder for alignment
-          )}
-
-          <select
-            value={filters.sort_by}
-            onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Sort by"
-          >
-            {sortOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
 
         {/* Results */}
         {error && (
@@ -378,15 +608,7 @@ const DocketBrowse = () => {
           </div>
         )}
 
-        {/* Results Count */}
-        {!loading && dockets.length > 0 && (
-          <div className="mb-6">
-            <p className="text-gray-600">
-              Showing {dockets.length} {dockets.length === 1 ? 'result' : 'results'}
-              {filters.query && ` for "${filters.query}"`}
-            </p>
-          </div>
-        )}
+
 
         {/* Loading State */}
         {loading && dockets.length === 0 && (
@@ -421,8 +643,9 @@ const DocketBrowse = () => {
         {dockets.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {dockets.map((docket) => (
-              <div key={docket.id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-6">
+              <div key={docket.id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full">
+                <div className="p-6 flex flex-col h-full">
+                  {/* Header with title and status */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
@@ -437,56 +660,93 @@ const DocketBrowse = () => {
                         {docket.summary}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(docket.status, docket.close_at)}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ml-3 flex-shrink-0 ${getStatusBadge(docket.status, docket.close_at)}`}>
                       {getStatusText(docket.status, docket.close_at)}
                     </span>
-                    <Link 
-                      to={`/agencies/${docket.agency_slug}`}
-                      className="text-sm text-gray-500 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                    >
-                      {docket.agency_name}
-                    </Link>
                   </div>
 
-                  {docket.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {docket.tags.slice(0, 3).map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  {/* Agency section - left aligned */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2">
+                      {docket.agency_jurisdiction && (
+                        <button
+                          onClick={() => {
+                            const newFilters = { ...filters, state: docket.agency_jurisdiction, offset: 0 }
+                            setFilters(newFilters)
+                            updateURL(newFilters)
+                            reset()
+                            browseDockets(newFilters)
+                          }}
+                          className="flex-shrink-0"
+                          aria-label={`${docket.agency_jurisdiction} state page`}
                         >
-                          {tag}
-                        </span>
-                      ))}
-                      {docket.tags.length > 3 && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          +{docket.tags.length - 3} more
-                        </span>
+                          <img 
+                            src={`/states/flag-${getStateAbbreviation(docket.agency_jurisdiction)}.svg`}
+                            alt={`${docket.agency_jurisdiction} flag`}
+                            className="w-6 h-4 object-contain"
+                          />
+                        </button>
                       )}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      {docket.comment_count} comments
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {docket.close_at ? `Closes ${formatDate(docket.close_at)}` : 'Open-ended'}
+                      <button
+                        onClick={() => {
+                          const newFilters = { ...filters, agency_name: docket.agency_name, offset: 0 }
+                          setFilters(newFilters)
+                          updateURL(newFilters)
+                          reset()
+                          browseDockets(newFilters)
+                        }}
+                        className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded text-left"
+                      >
+                        {docket.agency_name}
+                      </button>
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-200">
-                    <Link
-                      to={`/dockets/${docket.slug}`}
-                      className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      View Details & Comment
-                    </Link>
+                  {/* Spacer to push content to bottom */}
+                  <div className="flex-1"></div>
+
+                  {/* Bottom section with metadata and button - always at bottom */}
+                  <div className="mt-auto">
+                    <div className="space-y-2 text-xs text-gray-600 mb-4">
+                      <div className="flex items-center">
+                        <MessageSquare className="w-3 h-3 mr-1" />
+                        <Link 
+                          to={`/dockets/${docket.slug}#comments`}
+                          className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                        >
+                          {docket.comment_count} comments
+                        </Link>
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Opened {formatDate(docket.open_at)}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {docket.close_at ? (
+                          getDaysRemaining(docket.close_at) !== null ? (
+                            getDaysRemaining(docket.close_at)! <= 0 ? (
+                              'Closed'
+                            ) : (
+                              `${getDaysRemaining(docket.close_at)} days left`
+                            )
+                          ) : (
+                            `Closes ${formatDate(docket.close_at)}`
+                          )
+                        ) : (
+                          'Open-ended'
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-200">
+                      <Link
+                        to={`/dockets/${docket.slug}`}
+                        className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        View Details & Comment
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -494,25 +754,79 @@ const DocketBrowse = () => {
           </div>
         )}
 
-        {/* Load More */}
-        {hasMore && dockets.length > 0 && (
-          <div className="text-center">
-            <button
-              onClick={() => loadMore(filters)}
-              disabled={loading}
-              className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
-                  Loading...
-                </>
-              ) : (
-                'Load More Results'
-              )}
-            </button>
+        {/* Pagination Controls */}
+        {dockets.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-gray-200">
+            {/* Results Summary */}
+            <div className="text-sm text-gray-600">
+              Showing dockets {(filters.offset || 0) + 1}-{Math.min((filters.offset || 0) + dockets.length, total)} of {total}
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center space-x-2">
+              <label htmlFor="pageSize" className="text-sm text-gray-600">
+                Show:
+              </label>
+              <select
+                id="pageSize"
+                value={filters.limit || 10}
+                onChange={(e) => {
+                  const newLimit = parseInt(e.target.value)
+                  const newFilters = { ...filters, limit: newLimit, offset: 0 }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  browseDockets(newFilters)
+                }}
+                className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="text-sm text-gray-600">per page</span>
+            </div>
+
+            {/* Pagination Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  const newOffset = Math.max(0, (filters.offset || 0) - (filters.limit || 10))
+                  const newFilters = { ...filters, offset: newOffset }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  browseDockets(newFilters)
+                }}
+                disabled={loading || (filters.offset || 0) === 0}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <span className="text-sm text-gray-600">
+                Page {Math.floor((filters.offset || 0) / (filters.limit || 10)) + 1} of {Math.ceil(total / (filters.limit || 10))}
+              </span>
+              
+              <button
+                onClick={() => {
+                  const newOffset = (filters.offset || 0) + (filters.limit || 10)
+                  const newFilters = { ...filters, offset: newOffset }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  browseDockets(newFilters)
+                }}
+                disabled={loading || !hasMore}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
+
+
       </div>
     </PublicLayout>
   )
