@@ -117,7 +117,7 @@ const Footer = () => {
                     href="/about"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    About this Platform
+                    About the Platform
                   </a>
                 </li>
                 <li>
