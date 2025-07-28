@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SecurityBanner from '../components/SecurityBanner';
-import { HelpCircle, ChevronDown, ChevronRight, Users, Building2, MessageSquare, Shield, Settings, FileText } from 'lucide-react';
+import { HelpCircle, ChevronDown, ChevronRight, Users, Building2, MessageSquare, Shield, Settings, FileText, Clock } from 'lucide-react';
 
 interface FAQItem {
   id: string;
