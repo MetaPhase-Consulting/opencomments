@@ -82,7 +82,6 @@ export const useCommentSearch = () => {
         p_date_from: filters.date_from ? new Date(filters.date_from).toISOString() : null,
         p_date_to: filters.date_to ? new Date(filters.date_to).toISOString() : null,
         p_commenter_type: filters.commenter_type || null,
-        p_has_attachment: filters.has_attachment,
         p_position: filters.position || null,
         p_sort_by: filters.sort_by || 'newest',
         p_limit: filters.limit || 20,
