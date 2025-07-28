@@ -38,11 +38,11 @@ const HCaptchaComponent: React.FC<HCaptchaComponentProps> = ({
   }, []);
 
   if (!siteKey) {
-    console.error('VITE_HCAPTCHA_SITE_KEY not found in environment variables');
+    console.warn('VITE_HCAPTCHA_SITE_KEY not found in environment variables');
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
         <p className="text-sm text-red-600">
-          CAPTCHA configuration error. Please contact support.
+          CAPTCHA is not configured. Please contact support if this issue persists.
         </p>
       </div>
     );
