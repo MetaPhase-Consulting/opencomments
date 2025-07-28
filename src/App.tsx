@@ -39,6 +39,7 @@ import ThankYou from './pages/public/ThankYou';
 import SearchResults from './pages/SearchResults';
 import CommentSearch from './pages/public/CommentSearch';
 import CommentDetail from './pages/public/CommentDetail';
+import AgencyProfile from './pages/public/AgencyProfile';
 import Security from './pages/Security';
 import About from './pages/About';
 import Onboarding from './pages/Onboarding';
@@ -83,6 +84,7 @@ function App() {
             <Route path="/status" element={<Status />} />
             <Route path="/dockets" element={<DocketBrowse />} />
             <Route path="/dockets/:slug" element={<PublicDocketDetail />} />
+            <Route path="/agencies/:slug" element={<AgencyProfile />} />
             <Route path="/dockets/:slug/comment" element={<CommentWizard />} />
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/comments/search" element={<CommentSearch />} />

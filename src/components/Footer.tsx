@@ -86,7 +86,7 @@ const Footer = () => {
                     href="/dockets"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Browse Dockets
+                    Browse All Dockets
                   </a>
                 </li>
                 <li>
