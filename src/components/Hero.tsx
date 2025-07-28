@@ -289,7 +289,7 @@ const Hero = () => {
                   Submit Official Comments
                 </h3>
                 <p className="text-gray-700 mb-4">
-                  Comments are submitted on specific dockets (comment periods). First find the docket you want to comment on, then create an account to submit your official comment.
+                  Comments are submitted on specific agency dockets for proposed govenment actions. First find the docket you want to comment on, then create an account to submit your comment.
                 </p>
                 <a
                   href="/dockets"
