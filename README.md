@@ -1,15 +1,14 @@
 # OpenComments
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
-[![Built by MetaPhase](https://img.shields.io/badge/Built%20by-MetaPhase-blue)](https://metaphase.tech)
-[![Status](https://img.shields.io/badge/Status-Active-brightgreen)](https://status.opencomments.us)
-[![Deploy Status](https://api.netlify.com/api/v1/badges/your-site-id/deploy-status)](https://app.netlify.com/sites/your-site-name/deploys)
-[![CI/CD](https://github.com/MetaPhase-Consulting/opencomments/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/MetaPhase-Consulting/opencomments/actions)
+[![CivicTech](https://img.shields.io/badge/Civic-Tech-1f7a8c)](https://github.com/brianfunk/opencomments)
+[![Built by MetaPhase](https://img.shields.io/badge/Built%20by-MetaPhase-fb641f)](https://metaphase.tech)
+[![LinkedIn](https://img.shields.io/badge/Linked-In-0077b5)](https://www.linkedin.com/company/metaphase-consulting-llc/)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/4775fe17-b688-41cc-9426-917c8a5a94b2/deploy-status?branch=dev)](https://app.netlify.com/projects/opencomments/deploys)
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-green)](https://www.w3.org/WAI/WCAG21/quickref/)
-[![Security](https://img.shields.io/badge/Security-SOC%202-blue)](https://supabase.com/security)
-[![Uptime](https://img.shields.io/badge/Uptime-99.9%25-brightgreen)](https://status.opencomments.us)
-[![Version](https://img.shields.io/github/package-json/v/MetaPhase-Consulting/opencomments)](https://github.com/MetaPhase-Consulting/opencomments/releases)
+[![Security](https://img.shields.io/badge/Security-SOC%202-blue)](https://netlify.com/security)
+[![Uptime](https://img.shields.io/badge/Uptime-99.99%25-brightgreen)](https://status.opencomments.us)
 
 # OpenComments
 
@@ -37,7 +36,7 @@ OpenComments bridges the gap between government agencies and citizens by providi
 ### Setup
 ```bash
 # Clone repository
-git clone https://github.com/your-org/opencomments.git
+git clone https://github.com/brianfunk/opencomments.git
 cd opencomments
 
 # Install dependencies
@@ -113,10 +112,16 @@ Before deploying, ensure all tests pass:
 ## 📚 Documentation
 
 - **[DEVELOPER.md](docs/DEVELOPER.md)** - Development setup and workflows
+- **[DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design and technical overview
 - **[DATAMODEL.md](docs/DATAMODEL.md)** - Database schema and relationships
+- **[AGENCY_ONBOARDING.md](docs/AGENCY_ONBOARDING.md)** - First-time agency setup guide
 - **[AGENCY_ADMIN_GUIDE.md](docs/AGENCY_ADMIN_GUIDE.md)** - Guide for government staff
 - **[PUBLIC_USER_GUIDE.md](docs/PUBLIC_USER_GUIDE.md)** - Guide for citizens
+- **[OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md)** - Production operations guide
+- **[SECURITY_AUDIT_GUIDE.md](docs/SECURITY_AUDIT_GUIDE.md)** - Security audit procedures
+- **[ACCESSIBILITY_TRACKER.md](docs/ACCESSIBILITY_TRACKER.md)** - Accessibility compliance tracking
+- **[PERFORMANCE_NOTES.md](docs/PERFORMANCE_NOTES.md)** - Performance optimization guide
 
 ## 🤝 Contributing
 
