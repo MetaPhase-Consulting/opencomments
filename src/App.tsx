@@ -37,6 +37,8 @@ import PublicDocketDetail from './pages/public/DocketDetail';
 import CommentWizard from './pages/public/CommentWizard';
 import ThankYou from './pages/public/ThankYou';
 import SearchResults from './pages/SearchResults';
+import CommentSearch from './pages/public/CommentSearch';
+import CommentDetail from './pages/public/CommentDetail';
 import Security from './pages/Security';
 import About from './pages/About';
 import Onboarding from './pages/Onboarding';
@@ -83,6 +85,9 @@ function App() {
             <Route path="/dockets/:slug" element={<PublicDocketDetail />} />
             <Route path="/dockets/:slug/comment" element={<CommentWizard />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/comments/search" element={<CommentSearch />} />
+            <Route path="/comments/:id" element={<CommentDetail />} />
+            <Route path="/search" element={<Navigate to="/comments/search" replace />} />
             <Route path="/login" element={<PublicLogin />} />
             <Route path="/agency-login" element={<AgencyLogin />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
