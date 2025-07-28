@@ -31,6 +31,7 @@ import GlobalSearch from './pages/agency/GlobalSearch';
 import Reports from './pages/agency/Reports';
 import Unauthorized from './pages/Unauthorized';
 import Contact from './pages/Contact';
+import PlatformAdmin from './pages/platform/PlatformAdmin';
 import DocketBrowse from './pages/public/DocketBrowse';
 import PublicDocketDetail from './pages/public/DocketDetail';
 import CommentWizard from './pages/public/CommentWizard';
@@ -175,6 +176,9 @@ function App() {
                 <AgencySettings />
               </AgencyProtectedRoute>
             } />
+            
+            {/* Platform Admin Routes */}
+            <Route path="/platform-admin" element={<PlatformAdmin />} />
           </Routes>
         </Router>
       </AgencyProvider>

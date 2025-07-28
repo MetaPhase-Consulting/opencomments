@@ -1,7 +1,10 @@
 import React from 'react';
 import { Search, MessageSquare, ChevronDown } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { hasPlatformPermission } from '../types/platform';
 
 const Header = () => {
+  const { platformRole } = useAuth();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedState, setSelectedState] = React.useState('');
   const [showStateDropdown, setShowStateDropdown] = React.useState(false);
@@ -139,6 +142,17 @@ const Header = () => {
 
             {/* Right Navigation */}
             <div className="hidden md:flex items-center space-x-4">
+              {/* Platform Admin Link */}
+              {platformRole && hasPlatformPermission(platformRole, 'access_platform_admin') && (
+                <a
+                  href="/platform-admin"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-300 rounded-md hover:bg-purple-100 transition-colors"
+                >
+                  <span className="mr-2">🔧</span>
+                  Platform Admin
+                </a>
+              )}
+              
               <a
                 href="/agency/login"
                 className="px-4 py-2 text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
@@ -231,6 +245,16 @@ const Header = () => {
 
               {/* Mobile Auth Links */}
               <div className="pt-4 border-t border-gray-200 space-y-2">
+                {/* Platform Admin Link for Mobile */}
+                {platformRole && hasPlatformPermission(platformRole, 'access_platform_admin') && (
+                  <a
+                    href="/platform-admin"
+                    className="block w-full px-4 py-2 text-center text-sm font-medium text-purple-700 bg-purple-50 border border-purple-300 rounded hover:bg-purple-100 transition-colors"
+                  >
+                    🔧 Platform Admin
+                  </a>
+                )}
+                
                 <a
                   href="/agency/login"
                   className="block w-full px-4 py-2 text-center text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-red-600 hover:text-white"
