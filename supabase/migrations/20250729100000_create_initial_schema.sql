@@ -274,9 +274,12 @@ GRANT EXECUTE ON FUNCTION get_docket_public_detail TO anon, authenticated;
 
 CREATE OR REPLACE FUNCTION browse_public_dockets(
   p_query text DEFAULT NULL,
+  p_agency_name text DEFAULT NULL,
   p_state text DEFAULT NULL,
   p_status text DEFAULT 'open',
   p_tags text[] DEFAULT NULL,
+  p_date_from timestamptz DEFAULT NULL,
+  p_date_to timestamptz DEFAULT NULL,
   p_sort_by text DEFAULT 'newest',
   p_limit integer DEFAULT 20,
   p_offset integer DEFAULT 0
@@ -317,8 +320,11 @@ BEGIN
     agencies a ON d.agency_id = a.id
   WHERE
     (p_status IS NULL OR d.status::text = p_status)
+    AND (p_agency_name IS NULL OR a.name ILIKE ('%' || p_agency_name || '%'))
     AND (p_state IS NULL OR a.jurisdiction ILIKE p_state)
     AND (p_tags IS NULL OR d.tags && p_tags)
+    AND (p_date_from IS NULL OR d.created_at >= p_date_from)
+    AND (p_date_to IS NULL OR d.created_at <= p_date_to)
     AND (p_query IS NULL OR d.search_vector @@ plainto_tsquery('english', p_query))
   ORDER BY
     CASE WHEN p_sort_by = 'newest' THEN d.created_at END DESC,
