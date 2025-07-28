@@ -44,11 +44,11 @@ const Footer = () => {
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-300">Follow us:</span>
                 <a
-                  href="https://github.com/MetaPhase-Consulting"
+                  href="https://github.com/brianfunk/opencomments"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded p-1"
-                  aria-label="Follow MetaPhase on GitHub"
+                  aria-label="Follow OpenComments on GitHub"
                 >
                   <Github className="w-6 h-6" />
                 </a>
@@ -69,90 +69,88 @@ const Footer = () => {
         {/* Links Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Column 1 */}
+            {/* Column 1: Public */}
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-white">Platform</h4>
+              <h4 className="text-lg font-semibold mb-4 text-white">Public</h4>
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="/accessibility"
+                    href="/dockets"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Accessibility support
+                    Search Comments
                   </a>
                 </li>
                 <li>
                   <a
-                    href="/privacy"
+                    href="/dockets"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Privacy policy
+                    Submit a Comment
                   </a>
                 </li>
                 <li>
                   <a
-                    href="/terms"
+                    href="/dockets"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Terms of service
+                    Browse All Dockets
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/data-access"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    Data Access & API
                   </a>
                 </li>
               </ul>
             </div>
 
-            {/* Column 2 */}
-            <div>
-              <h4 className="text-lg font-semibold mb-4 text-white">Resources</h4>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="/contact"
-                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
-                  >
-                    Contact us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/api"
-                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
-                  >
-                    API documentation
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://status.opencomments.us"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
-                  >
-                    System status
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3 */}
+            {/* Column 2: Government */}
             <div>
               <h4 className="text-lg font-semibold mb-4 text-white">Government</h4>
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="/agencies"
+                    href="/agency"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Agency portal
+                    Agency Portal
                   </a>
                 </li>
                 <li>
                   <a
-                    href="/compliance"
+                    href="/onboarding"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Compliance
+                    Onboarding for Government Agencies
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="/user-guide"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    User Guide
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/about"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    About Platform
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: Compliance */}
+            <div>
+              <h4 className="text-lg font-semibold mb-4 text-white">Compliance</h4>
+              <ul className="space-y-3">
                 <li>
                   <a
                     href="/security"
@@ -161,10 +159,34 @@ const Footer = () => {
                     Security
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="/accessibility"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    Accessibility
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/privacy"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/terms"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    Terms of Service
+                  </a>
+                </li>
               </ul>
             </div>
 
-            {/* Column 4 */}
+            {/* Column 4: Support */}
             <div>
               <h4 className="text-lg font-semibold mb-4 text-white">Support</h4>
               <ul className="space-y-3">
@@ -173,23 +195,23 @@ const Footer = () => {
                     href="/contact"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Contact us
+                    Contact Us
                   </a>
                 </li>
                 <li>
                   <a
-                    href="/feedback"
+                    href="/faqs"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Send feedback
+                    FAQs
                   </a>
                 </li>
                 <li>
                   <a
-                    href="/training"
+                    href="/status"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Training resources
+                    System Status
                   </a>
                 </li>
               </ul>

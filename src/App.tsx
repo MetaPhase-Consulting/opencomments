@@ -35,6 +35,13 @@ import DocketBrowse from './pages/public/DocketBrowse';
 import PublicDocketDetail from './pages/public/DocketDetail';
 import CommentWizard from './pages/public/CommentWizard';
 import ThankYou from './pages/public/ThankYou';
+import Security from './pages/Security';
+import About from './pages/About';
+import Onboarding from './pages/Onboarding';
+import FAQs from './pages/FAQs';
+import UserGuide from './pages/UserGuide';
+import DataAccess from './pages/DataAccess';
+import Status from './pages/Status';
 
 function App() {
   return (
@@ -59,6 +66,13 @@ function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/accessibility" element={<Accessibility />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/faqs" element={<FAQs />} />
+            <Route path="/user-guide" element={<UserGuide />} />
+            <Route path="/data-access" element={<DataAccess />} />
+            <Route path="/status" element={<Status />} />
             <Route path="/dockets" element={<DocketBrowse />} />
             <Route path="/dockets/:slug" element={<PublicDocketDetail />} />
             <Route path="/dockets/:slug/comment" element={<CommentWizard />} />
@@ -81,6 +95,7 @@ function App() {
             <Route path="/agency/login" element={<AgencyLoginNew />} />
             <Route path="/agency/select" element={<AgencySelect />} />
             <Route path="/agency/no-access" element={<AgencyNoAccess />} />
+            <Route path="/agency" element={<Navigate to="/agency/login" replace />} />
             <Route path="/agency/dashboard" element={
               <AgencyProtectedRoute>
                 <AgencyDashboardNew />
