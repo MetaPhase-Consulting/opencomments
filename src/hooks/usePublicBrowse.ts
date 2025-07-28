@@ -120,11 +120,8 @@ export const usePublicBrowse = () => {
 
       const results = data || []
       
-      if (filters.offset === 0) {
-        setDockets(results)
-      } else {
-        setDockets(prev => [...prev, ...results])
-      }
+      // Always replace dockets for pagination, don't append
+      setDockets(results)
 
       setHasMore(results.length === (filters.limit || 10))
       // Use the total_count from the first result if available, otherwise fall back to previous logic

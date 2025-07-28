@@ -50,6 +50,63 @@ const DocketDetail = () => {
     });
   };
 
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc'
+    }
+    return stateAbbreviations[stateName] || stateName.toLowerCase().replace(/\s+/g, '-')
+  }
+
   const formatFileSize = (bytes: number) => {
     const mb = bytes / (1024 * 1024);
     return mb < 1 ? `${Math.round(bytes / 1024)}KB` : `${mb.toFixed(1)}MB`;
@@ -162,8 +219,7 @@ const DocketDetail = () => {
         {/* Breadcrumb */}
         <Breadcrumb 
           items={[
-            { label: 'Browse Dockets', href: '/dockets' },
-            { label: docket.agency_jurisdiction || 'State', href: docket.agency_jurisdiction ? `/state/${docket.agency_jurisdiction.toLowerCase().replace(/\s+/g, '-')}` : undefined },
+            { label: docket.agency_jurisdiction || 'State', href: docket.agency_jurisdiction ? `/state/${getStateAbbreviation(docket.agency_jurisdiction)}` : undefined },
             { label: docket.agency_name, href: `/agencies/${docket.agency_slug}` },
             { label: docket.title, current: true }
           ]}

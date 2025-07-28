@@ -60,6 +60,63 @@ const CommentDetail = () => {
     }
   }
 
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc'
+    }
+    return stateAbbreviations[stateName] || stateName.toLowerCase().replace(/\s+/g, '-')
+  }
+
   if (loading) {
     return (
       <PublicLayout>
@@ -104,9 +161,7 @@ const CommentDetail = () => {
         {/* Breadcrumb */}
         <Breadcrumb 
           items={[
-            { label: 'Search Comments', href: '/comments' },
-            { label: comment?.agency_jurisdiction || 'State', href: comment?.agency_jurisdiction ? `/state/${comment.agency_jurisdiction.toLowerCase().replace(/\s+/g, '-')}` : undefined },
-            { label: comment?.agency_name || 'Agency', href: comment?.agency_name ? `/agencies/${comment.agency_name.toLowerCase().replace(/\s+/g, '-')}` : undefined },
+            { label: comment?.agency_jurisdiction || 'State', href: comment?.agency_jurisdiction ? `/state/${getStateAbbreviation(comment.agency_jurisdiction)}` : undefined },
             { label: comment?.docket_title || 'Docket', href: comment?.docket_slug ? `/dockets/${comment.docket_slug}` : undefined },
             { label: 'Comment', current: true }
           ]}

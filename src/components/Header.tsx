@@ -17,6 +17,7 @@ const Header = () => {
     { code: 'CA', name: 'California' },
     { code: 'CO', name: 'Colorado' },
     { code: 'CT', name: 'Connecticut' },
+    { code: 'DC', name: 'District of Columbia' },
     { code: 'DE', name: 'Delaware' },
     { code: 'FL', name: 'Florida' },
     { code: 'GA', name: 'Georgia' },
@@ -59,8 +60,7 @@ const Header = () => {
     { code: 'WA', name: 'Washington' },
     { code: 'WV', name: 'West Virginia' },
     { code: 'WI', name: 'Wisconsin' },
-    { code: 'WY', name: 'Wyoming' },
-    { code: 'DC', name: 'District of Columbia' }
+    { code: 'WY', name: 'Wyoming' }
   ];
 
   const handleStateSelect = (stateCode: string) => {

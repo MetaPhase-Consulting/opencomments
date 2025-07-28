@@ -35,6 +35,63 @@ const AgencyProfile = () => {
     })
   }
 
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc'
+    }
+    return stateAbbreviations[stateName] || stateName.toLowerCase().replace(/\s+/g, '-')
+  }
+
   const getDaysRemaining = (closeDate?: string) => {
     if (!closeDate) return null
     const now = new Date()
@@ -133,8 +190,7 @@ const AgencyProfile = () => {
         {/* Breadcrumb */}
         <Breadcrumb 
           items={[
-            { label: 'Browse Dockets', href: '/dockets' },
-            { label: agency?.jurisdiction || 'State', href: agency?.jurisdiction ? `/state/${agency.jurisdiction.toLowerCase().replace(/\s+/g, '-')}` : undefined },
+            { label: agency?.jurisdiction || 'State', href: agency?.jurisdiction ? `/state/${getStateAbbreviation(agency.jurisdiction)}` : undefined },
             { label: agency?.name || 'Agency', current: true }
           ]}
         />

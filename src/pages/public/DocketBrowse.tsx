@@ -16,18 +16,41 @@ import {
 
 const DocketBrowse = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const query = searchParams.get('q') || ''
+  const query = (() => {
+    const q = searchParams.get('q')
+    return q && q.length <= 500 ? q : ''
+  })()
   const { dockets, loading, error, hasMore, total, browseDockets, loadMore, reset } = usePublicBrowse()
   const [filters, setFilters] = useState<DocketSearchFilters>({
     query: query,
-    status: (searchParams.get('status') as any) || 'all',
-    sort_by: (searchParams.get('sort') as any) || 'newest',
-    limit: parseInt(searchParams.get('limit') || '10'),
-    offset: parseInt(searchParams.get('offset') || '0'),
-    agency_name: searchParams.get('agency') || undefined,
-    state: searchParams.get('state') || undefined,
-    date_from: searchParams.get('date_from') || undefined,
-    date_to: searchParams.get('date_to') || undefined
+    status: (() => {
+      const status = searchParams.get('status')
+      const validStatuses = ['all', 'open', 'closed', 'upcoming'] as const
+      return validStatuses.includes(status as any) ? (status as any) : 'all'
+    })(),
+    sort_by: (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'title_asc', 'title_desc', 'agency_asc', 'agency_desc', 'closing_soon'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })(),
+    limit: Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10)),
+    offset: Math.max(0, parseInt(searchParams.get('offset') || '0') || 0),
+    agency_name: (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })(),
+    state: (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })(),
+    date_from: (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })(),
+    date_to: (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
   })
   const [showFilters, setShowFilters] = useState(false)
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
@@ -83,22 +106,45 @@ const DocketBrowse = () => {
       updateURL(newFilters)
       reset()
       browseDockets(newFilters)
-    }, 300) // 300ms delay
+    }, 150) // 150ms delay
 
     setSearchTimeout(timeout)
   }, [filters, browseDockets, reset, updateURL])
 
   useEffect(() => {
     // Handle URL parameter changes
-    const urlQuery = searchParams.get('q') || ''
-    const urlStatus = (searchParams.get('status') as any) || 'all'
-    const urlSort = (searchParams.get('sort') as any) || 'newest'
-    const urlLimit = parseInt(searchParams.get('limit') || '10')
-    const urlOffset = parseInt(searchParams.get('offset') || '0')
-    const urlAgency = searchParams.get('agency') || undefined
-    const urlState = searchParams.get('state') || undefined
-    const urlDateFrom = searchParams.get('date_from') || undefined
-    const urlDateTo = searchParams.get('date_to') || undefined
+    const urlQuery = (() => {
+      const q = searchParams.get('q')
+      return q && q.length <= 500 ? q : ''
+    })()
+    const urlStatus = (() => {
+      const status = searchParams.get('status')
+      const validStatuses = ['all', 'open', 'closed', 'upcoming'] as const
+      return validStatuses.includes(status as any) ? (status as any) : 'all'
+    })()
+    const urlSort = (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'title_asc', 'title_desc', 'agency_asc', 'agency_desc', 'closing_soon'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })()
+    const urlLimit = Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10))
+    const urlOffset = Math.max(0, parseInt(searchParams.get('offset') || '0') || 0)
+    const urlAgency = (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })()
+    const urlState = (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })()
+    const urlDateFrom = (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
+    const urlDateTo = (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
 
     const newFilters = {
       query: urlQuery,
@@ -134,10 +180,9 @@ const DocketBrowse = () => {
     // For text fields, use debounced search
     const textFields = ['agency_name', 'query']
     if (textFields.includes(key) && typeof value === 'string') {
-      if (value.length >= 2 || value.length === 0) {
-        reset()
-        browseDockets(newFilters)
-      }
+      // Search immediately for text fields
+      reset()
+      browseDockets(newFilters)
     } else {
       // For non-text fields (dropdowns, etc.), search immediately
       reset()
@@ -345,13 +390,9 @@ const DocketBrowse = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Browse Public Dockets
-            {query && (
-              <span className="text-gray-600 font-normal"> for "{query}"</span>
-            )}
           </h1>
           <p className="text-lg text-gray-600">
-            Find and participate in open comment periods on government proposals, 
-            regulations, and policy changes that affect your community.
+            Find and participate in open comment periods on government proposals, regulations, and policy changes.
           </p>
         </div>
 
@@ -370,13 +411,8 @@ const DocketBrowse = () => {
                   const query = e.target.value
                   setFilters(prev => ({ ...prev, query }))
                   
-                  // Trigger real-time search after 2+ characters
-                  if (query.length >= 2) {
-                    debouncedSearch(query)
-                  } else if (query.length === 0) {
-                    // Clear search immediately if empty
-                    debouncedSearch('')
-                  }
+                  // Trigger real-time search immediately
+                  debouncedSearch(query)
                 }}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                 placeholder="Search by keyword, topic, or agency..."
@@ -486,38 +522,54 @@ const DocketBrowse = () => {
                     </select>
                   </div>
                 </div>
+                
+                {/* Active Filter Chips */}
+                {hasActiveFilters() && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-gray-900">Active Filters</h3>
+                      <button
+                        onClick={clearFilters}
+                        className="text-sm text-blue-700 hover:text-blue-800"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {filters.query && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                          Search: "{filters.query}"
+                          <button
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, query: '' }))
+                              setSearchParams(new URLSearchParams())
+                            }}
+                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {getActiveFilterChips().map(chip => (
+                        <span key={chip.key} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                          {chip.label}: {chip.value}
+                          <button
+                            onClick={chip.onRemove}
+                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </form>
         </div>
         
-        {/* Active Filter Chips */}
-        {hasActiveFilters() && (
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-900">Active Filters</h3>
-              <button
-                onClick={clearFilters}
-                className="text-sm text-blue-700 hover:text-blue-800"
-              >
-                Clear all
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {getActiveFilterChips().map(chip => (
-                <span key={chip.key} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                  {chip.label}: {chip.value}
-                  <button
-                    onClick={chip.onRemove}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Results Count & Sort */}
         {!loading && dockets.length > 0 && (
@@ -591,8 +643,9 @@ const DocketBrowse = () => {
         {dockets.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {dockets.map((docket) => (
-              <div key={docket.id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-6">
+              <div key={docket.id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col h-full">
+                <div className="p-6 flex flex-col h-full">
+                  {/* Header with title and status */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
@@ -612,79 +665,88 @@ const DocketBrowse = () => {
                     </span>
                   </div>
 
-                  <div className="mb-4 flex items-center gap-2">
-                    {docket.agency_jurisdiction && (
+                  {/* Agency section - left aligned */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2">
+                      {docket.agency_jurisdiction && (
+                        <button
+                          onClick={() => {
+                            const newFilters = { ...filters, state: docket.agency_jurisdiction, offset: 0 }
+                            setFilters(newFilters)
+                            updateURL(newFilters)
+                            reset()
+                            browseDockets(newFilters)
+                          }}
+                          className="flex-shrink-0"
+                          aria-label={`${docket.agency_jurisdiction} state page`}
+                        >
+                          <img 
+                            src={`/states/flag-${getStateAbbreviation(docket.agency_jurisdiction)}.svg`}
+                            alt={`${docket.agency_jurisdiction} flag`}
+                            className="w-6 h-4 object-contain"
+                          />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
-                          const newFilters = { ...filters, state: docket.agency_jurisdiction, offset: 0 }
+                          const newFilters = { ...filters, agency_name: docket.agency_name, offset: 0 }
                           setFilters(newFilters)
                           updateURL(newFilters)
                           reset()
                           browseDockets(newFilters)
                         }}
-                        className="flex-shrink-0"
-                        aria-label={`${docket.agency_jurisdiction} state page`}
+                        className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded text-left"
                       >
-                        <img 
-                          src={`/states/flag-${getStateAbbreviation(docket.agency_jurisdiction)}.svg`}
-                          alt={`${docket.agency_jurisdiction} flag`}
-                          className="w-6 h-4 object-contain"
-                        />
+                        {docket.agency_name}
                       </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        const newFilters = { ...filters, agency_name: docket.agency_name, offset: 0 }
-                        setFilters(newFilters)
-                        updateURL(newFilters)
-                        reset()
-                        browseDockets(newFilters)
-                      }}
-                      className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                    >
-                      {docket.agency_name}
-                    </button>
+                    </div>
                   </div>
 
-                  <div className="space-y-2 text-xs text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <MessageSquare className="w-3 h-3 mr-1" />
-                      <Link 
-                        to={`/dockets/${docket.slug}#comments`}
-                        className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                      >
-                        {docket.comment_count} comments
-                      </Link>
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      Opened {formatDate(docket.open_at)}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {docket.close_at ? (
-                        getDaysRemaining(docket.close_at) !== null ? (
-                          getDaysRemaining(docket.close_at)! <= 0 ? (
-                            'Closed'
+                  {/* Spacer to push content to bottom */}
+                  <div className="flex-1"></div>
+
+                  {/* Bottom section with metadata and button - always at bottom */}
+                  <div className="mt-auto">
+                    <div className="space-y-2 text-xs text-gray-600 mb-4">
+                      <div className="flex items-center">
+                        <MessageSquare className="w-3 h-3 mr-1" />
+                        <Link 
+                          to={`/dockets/${docket.slug}#comments`}
+                          className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                        >
+                          {docket.comment_count} comments
+                        </Link>
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Opened {formatDate(docket.open_at)}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {docket.close_at ? (
+                          getDaysRemaining(docket.close_at) !== null ? (
+                            getDaysRemaining(docket.close_at)! <= 0 ? (
+                              'Closed'
+                            ) : (
+                              `${getDaysRemaining(docket.close_at)} days left`
+                            )
                           ) : (
-                            `${getDaysRemaining(docket.close_at)} days left`
+                            `Closes ${formatDate(docket.close_at)}`
                           )
                         ) : (
-                          `Closes ${formatDate(docket.close_at)}`
-                        )
-                      ) : (
-                        'Open-ended'
-                      )}
+                          'Open-ended'
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="pt-4 border-t border-gray-200">
-                    <Link
-                      to={`/dockets/${docket.slug}`}
-                      className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      View Details & Comment
-                    </Link>
+                    <div className="pt-4 border-t border-gray-200">
+                      <Link
+                        to={`/dockets/${docket.slug}`}
+                        className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        View Details & Comment
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>

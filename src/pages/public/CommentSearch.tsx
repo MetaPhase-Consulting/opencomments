@@ -18,24 +18,63 @@ import {
 
 const CommentSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const query = searchParams.get('q') || ''
+  const query = (() => {
+    const q = searchParams.get('q')
+    return q && q.length <= 500 ? q : ''
+  })()
   const { results, loading, error, hasMore, total, searchComments, loadMore, reset } = useCommentSearch()
   
   const [filters, setFilters] = useState<CommentSearchFilters>({
     query: query,
-    sort_by: (searchParams.get('sort') as any) || 'newest',
-    limit: parseInt(searchParams.get('limit') || '10'),
-    offset: parseInt(searchParams.get('offset') || '0'),
-    agency_name: searchParams.get('agency') || undefined,
-    state: searchParams.get('state') || undefined,
-    comment_filter: searchParams.get('comment_filter') || undefined,
-    filing_company: searchParams.get('filing_company') || undefined,
-    comment_id: searchParams.get('comment_id') || undefined,
-    docket_id: searchParams.get('docket_id') || undefined,
-    date_from: searchParams.get('date_from') || undefined,
-    date_to: searchParams.get('date_to') || undefined,
-    commenter_type: (searchParams.get('commenter_type') as any) || undefined,
-    position: (searchParams.get('position') as any) || undefined
+    sort_by: (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'agency', 'docket'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })(),
+    limit: Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10)),
+    offset: Math.max(0, parseInt(searchParams.get('offset') || '0') || 0),
+    agency_name: (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })(),
+    state: (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })(),
+    comment_filter: (() => {
+      const filter = searchParams.get('comment_filter')
+      return filter && filter.length <= 200 ? filter : undefined
+    })(),
+    filing_company: (() => {
+      const company = searchParams.get('filing_company')
+      return company && company.length <= 200 ? company : undefined
+    })(),
+    comment_id: (() => {
+      const id = searchParams.get('comment_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })(),
+    docket_id: (() => {
+      const id = searchParams.get('docket_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })(),
+    date_from: (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })(),
+    date_to: (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })(),
+    commenter_type: (() => {
+      const type = searchParams.get('commenter_type')
+      const validTypes = ['individual', 'organization', 'agent', 'anonymous'] as const
+      return validTypes.includes(type as any) ? (type as any) : undefined
+    })(),
+    position: (() => {
+      const pos = searchParams.get('position')
+      const validPositions = ['support', 'oppose', 'neutral', 'unclear', 'not_specified'] as const
+      return validPositions.includes(pos as any) ? (pos as any) : undefined
+    })()
   })
   
   const [showFilters, setShowFilters] = useState(false)
@@ -77,20 +116,59 @@ const CommentSearch = () => {
 
   useEffect(() => {
     // Handle URL parameter changes
-    const urlQuery = searchParams.get('q') || ''
-    const urlSort = (searchParams.get('sort') as any) || 'newest'
-    const urlLimit = parseInt(searchParams.get('limit') || '10')
-    const urlOffset = parseInt(searchParams.get('offset') || '0')
-    const urlAgency = searchParams.get('agency') || undefined
-    const urlState = searchParams.get('state') || undefined
-    const urlCommentFilter = searchParams.get('comment_filter') || undefined
-    const urlFilingCompany = searchParams.get('filing_company') || undefined
-    const urlCommentId = searchParams.get('comment_id') || undefined
-    const urlDocketId = searchParams.get('docket_id') || undefined
-    const urlDateFrom = searchParams.get('date_from') || undefined
-    const urlDateTo = searchParams.get('date_to') || undefined
-    const urlCommenterType = (searchParams.get('commenter_type') as any) || undefined
-    const urlPosition = (searchParams.get('position') as any) || undefined
+    const urlQuery = (() => {
+      const q = searchParams.get('q')
+      return q && q.length <= 500 ? q : ''
+    })()
+    const urlSort = (() => {
+      const sort = searchParams.get('sort')
+      const validSorts = ['newest', 'oldest', 'agency', 'docket'] as const
+      return validSorts.includes(sort as any) ? (sort as any) : 'newest'
+    })()
+    const urlLimit = Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10') || 10))
+    const urlOffset = Math.max(0, parseInt(searchParams.get('offset') || '0') || 0)
+    const urlAgency = (() => {
+      const agency = searchParams.get('agency')
+      return agency && agency.length <= 200 ? agency : undefined
+    })()
+    const urlState = (() => {
+      const state = searchParams.get('state')
+      return state && state.length <= 100 ? state : undefined
+    })()
+    const urlCommentFilter = (() => {
+      const filter = searchParams.get('comment_filter')
+      return filter && filter.length <= 200 ? filter : undefined
+    })()
+    const urlFilingCompany = (() => {
+      const company = searchParams.get('filing_company')
+      return company && company.length <= 200 ? company : undefined
+    })()
+    const urlCommentId = (() => {
+      const id = searchParams.get('comment_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })()
+    const urlDocketId = (() => {
+      const id = searchParams.get('docket_id')
+      return id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : undefined
+    })()
+    const urlDateFrom = (() => {
+      const date = searchParams.get('date_from')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
+    const urlDateTo = (() => {
+      const date = searchParams.get('date_to')
+      return date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined
+    })()
+    const urlCommenterType = (() => {
+      const type = searchParams.get('commenter_type')
+      const validTypes = ['individual', 'organization', 'agent', 'anonymous'] as const
+      return validTypes.includes(type as any) ? (type as any) : undefined
+    })()
+    const urlPosition = (() => {
+      const pos = searchParams.get('position')
+      const validPositions = ['support', 'oppose', 'neutral', 'unclear', 'not_specified'] as const
+      return validPositions.includes(pos as any) ? (pos as any) : undefined
+    })()
 
     const newFilters = {
       query: urlQuery,
@@ -148,7 +226,7 @@ const CommentSearch = () => {
       updateURL(newFilters)
       reset()
       searchComments(newFilters)
-    }, 300) // 300ms delay
+    }, 150) // 150ms delay
 
     setSearchTimeout(timeout)
   }, [filters, searchComments, reset, updateURL])
@@ -170,10 +248,9 @@ const CommentSearch = () => {
     // For text fields, use debounced search
     const textFields = ['agency_name', 'comment_filter', 'filing_company', 'comment_id', 'docket_id']
     if (textFields.includes(key) && typeof value === 'string') {
-      if (value.length >= 2 || value.length === 0) {
-        reset()
-        searchComments(newFilters)
-      }
+      // Search immediately for text fields
+      reset()
+      searchComments(newFilters)
     } else {
       // For non-text fields (dropdowns, etc.), search immediately
       reset()
@@ -268,16 +345,25 @@ const CommentSearch = () => {
   const highlightText = (text: string, query?: string) => {
     if (!query || !text) return text
     
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-    const parts = text.split(regex)
+    // Sanitize the query to prevent regex injection
+    const sanitizedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     
-    return parts.map((part, index) => 
-      regex.test(part) ? (
-        <mark key={index} className="bg-yellow-200">
-          {part}
-        </mark>
-      ) : part
-    )
+    try {
+      const regex = new RegExp(`(${sanitizedQuery})`, 'gi')
+      const parts = text.split(regex)
+      
+      return parts.map((part, index) => 
+        regex.test(part) ? (
+          <mark key={index} className="bg-yellow-200">
+            {part}
+          </mark>
+        ) : part
+      )
+    } catch (error) {
+      // If regex creation fails, return original text
+      console.warn('Invalid search query for highlighting:', query)
+      return text
+    }
   }
 
   const getStateAbbreviation = (stateName: string) => {
@@ -347,7 +433,7 @@ const CommentSearch = () => {
 
   return (
     <PublicLayout 
-      title={`Search Public Comments${query ? ` for "${query}"` : ''} - OpenComments`}
+      title="Search Public Comments - OpenComments"
       description="Search through public comments submitted on government proposals"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -355,9 +441,6 @@ const CommentSearch = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Search Public Comments
-            {query && (
-              <span className="text-gray-600 font-normal"> for "{query}"</span>
-            )}
           </h1>
           <p className="text-lg text-gray-600">
             Search through public comments submitted on government proposals and policy changes.
@@ -379,13 +462,8 @@ const CommentSearch = () => {
                   const query = e.target.value
                   setFilters(prev => ({ ...prev, query }))
                   
-                  // Trigger real-time search after 2+ characters
-                  if (query.length >= 2) {
-                    debouncedSearch(query)
-                  } else if (query.length === 0) {
-                    // Clear search immediately if empty
-                    debouncedSearch('')
-                  }
+                  // Trigger real-time search immediately
+                  debouncedSearch(query)
                 }}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                 placeholder="Search public comments..."

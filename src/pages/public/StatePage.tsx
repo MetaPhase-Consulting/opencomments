@@ -169,7 +169,9 @@ const StatePage = () => {
           }) || []
         )
 
-        setAgencies(transformedAgencies)
+        // Sort agencies alphabetically by name
+        const sortedAgencies = transformedAgencies.sort((a, b) => a.name.localeCompare(b.name))
+        setAgencies(sortedAgencies)
       } catch (err) {
         console.error('Error fetching state data:', err)
         setError('An unexpected error occurred')
@@ -272,50 +274,63 @@ const StatePage = () => {
                 <p className="text-gray-600 mb-6">
                   There are currently no government agencies set up in {stateInfo.name}.
                 </p>
-                <Link 
-                  to="/" 
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Browse All States
-                </Link>
+                <div className="space-y-4">
+                  <Link 
+                    to="/dockets" 
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors mr-4"
+                  >
+                    Browse All Dockets
+                  </Link>
+                  <Link 
+                    to="/onboarding" 
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Join OpenComments
+                  </Link>
+                </div>
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {agencies.map((agency) => (
-                  <div key={agency.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {agency.name}
-                          </h3>
-                          {agency.description && (
-                            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                              {agency.description}
-                            </p>
-                          )}
-                        </div>
-                        <Building2 className="w-6 h-6 text-gray-400 flex-shrink-0 ml-2" />
+                  <div key={agency.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow flex flex-col h-full">
+                    <div className="p-6 flex flex-col h-full">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {agency.name}
+                        </h3>
+                        {agency.description && (
+                          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                            {agency.description}
+                          </p>
+                        )}
                       </div>
                       
                       <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                        <div className="flex items-center">
+                        <Link 
+                          to={`/agencies/${agency.slug}#dockets`}
+                          className="flex items-center hover:text-blue-600 transition-colors"
+                        >
                           <MessageSquare className="w-4 h-4 mr-1" />
                           <span>{agency.docket_count} dockets</span>
-                        </div>
-                        <div className="flex items-center">
+                        </Link>
+                        <Link 
+                          to={`/comments/search?agency=${encodeURIComponent(agency.name)}`}
+                          className="flex items-center hover:text-blue-600 transition-colors"
+                        >
                           <Calendar className="w-4 h-4 mr-1" />
                           <span>{agency.comment_count} comments</span>
-                        </div>
+                        </Link>
                       </div>
                       
-                      <Link 
-                        to={`/agencies/${agency.slug}`}
-                        className="inline-flex items-center w-full justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-                      >
-                        View Agency
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Link>
+                      <div className="mt-auto">
+                        <Link 
+                          to={`/agencies/${agency.slug}`}
+                          className="inline-flex items-center w-full justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          View Agency
+                          <ChevronRight className="w-4 h-4 ml-2" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}
