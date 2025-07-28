@@ -18,11 +18,43 @@ const FAQs = () => {
           <p className="text-lg text-gray-600 mb-8">
             Frequently Asked Questions
           </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
-            <p className="text-blue-800">
-              Coming soon - comprehensive answers to common questions about using OpenComments 
-              for both citizens and government agencies.
-            </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">For Government Agencies</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">How do I set up my agency?</h4>
+                  <p className="text-sm text-gray-600">Contact us to get started with agency setup and user training.</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Is OpenComments secure?</h4>
+                  <p className="text-sm text-gray-600">Yes, we use enterprise-grade security with SOC 2 compliance and government-standard data protection.</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Can I export comment data?</h4>
+                  <p className="text-sm text-gray-600">Yes, you can export comments as CSV files and attachments as ZIP bundles for archival and analysis.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">For Citizens</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">How do I submit a comment?</h4>
+                  <p className="text-sm text-gray-600">Create an account, find the relevant docket, and submit your feedback through the comment form.</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Are my comments public?</h4>
+                  <p className="text-sm text-gray-600">Yes, approved comments become part of the public record, but your email address remains private.</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Can I track my submissions?</h4>
+                  <p className="text-sm text-gray-600">Yes, your dashboard shows all submitted comments and their approval status.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

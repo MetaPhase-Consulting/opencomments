@@ -114,6 +114,14 @@ const Footer = () => {
               <ul className="space-y-3">
                 <li>
                   <a
+                    href="/about"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    About this Platform
+                  </a>
+                </li>
+                <li>
+                  <a
                     href="/agency"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
@@ -125,7 +133,7 @@ const Footer = () => {
                     href="/onboarding"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Onboarding for Government Agencies
+                    Onboarding
                   </a>
                 </li>
                 <li>
@@ -133,15 +141,7 @@ const Footer = () => {
                     href="/user-guide"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    User Guide
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/about"
-                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
-                  >
-                    About Platform
+                    Agency Admin Guide
                   </a>
                 </li>
               </ul>
@@ -208,7 +208,9 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
-                    href="/status"
+                    href="https://status.opencomments.us"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
                     System Status
@@ -232,7 +234,7 @@ const Footer = () => {
                   href="https://metaphase.tech" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 underline focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded ml-1"
+                  className="text-orange-400 hover:text-orange-300 underline focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded ml-1"
                 >
                   MetaPhase
                 </a>

@@ -16,11 +16,11 @@ const UserGuide = () => {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">User Guide</h1>
           <p className="text-lg text-gray-600 mb-8">
-            Documentation for managing dockets and moderation
+            Agency Admin Guide
           </p>
           <div className="bg-green-50 border border-green-200 rounded-lg p-8">
             <p className="text-green-800">
-              Coming soon - comprehensive documentation for government staff on how to create 
+              Coming soon - comprehensive documentation for agency administrators on how to create 
               and manage comment periods, moderate submissions, and export data for analysis.
             </p>
           </div>

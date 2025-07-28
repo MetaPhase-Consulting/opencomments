@@ -194,32 +194,6 @@ const Contact = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start">
-                  <Phone className="w-5 h-5 text-blue-600 mt-1 mr-3" />
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">Phone Support</h3>
-                    <p className="text-sm text-gray-600">1-800-COMMENTS</p>
-                    <p className="text-xs text-gray-500 mt-1">Mon-Fri, 9 AM - 5 PM EST</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <MapPin className="w-5 h-5 text-blue-600 mt-1 mr-3" />
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">System Status</h3>
-                    <p className="text-sm text-gray-600">
-                      <a 
-                        href="https://status.opencomments.us" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-700 hover:text-blue-800 underline"
-                      >
-                        status.opencomments.us
-                      </a>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Check service availability</p>
-                  </div>
-                </div>
               </div>
 
               <div className="mt-8 pt-6 border-t border-blue-200">
@@ -382,48 +356,6 @@ const Contact = () => {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Frequently Asked Questions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">For Government Agencies</h3>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">How do I set up my agency?</h4>
-                  <p className="text-sm text-gray-600">Contact us to get started with agency setup and user training.</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Is OpenComments secure?</h4>
-                  <p className="text-sm text-gray-600">Yes, we use enterprise-grade security with SOC 2 compliance and government-standard data protection.</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Can I export comment data?</h4>
-                  <p className="text-sm text-gray-600">Yes, you can export comments as CSV files and attachments as ZIP bundles for archival and analysis.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">For Citizens</h3>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">How do I submit a comment?</h4>
-                  <p className="text-sm text-gray-600">Create an account, find the relevant docket, and submit your feedback through the comment form.</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Are my comments public?</h4>
-                  <p className="text-sm text-gray-600">Yes, approved comments become part of the public record, but your email address remains private.</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">Can I track my submissions?</h4>
-                  <p className="text-sm text-gray-600">Yes, your dashboard shows all submitted comments and their approval status.</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
