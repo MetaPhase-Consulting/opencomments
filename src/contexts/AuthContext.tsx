@@ -100,9 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         const profileData = await fetchProfile(session.user.id)
         const platformRoleData = await fetchPlatformRole(session.user.id)
-        const platformRoleData = await fetchPlatformRole(session.user.id)
         setProfile(profileData)
-        setPlatformRole(platformRoleData)
         setPlatformRole(platformRoleData)
       } else {
         setProfile(null)
