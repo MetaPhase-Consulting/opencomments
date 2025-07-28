@@ -36,6 +36,7 @@ import DocketBrowse from './pages/public/DocketBrowse';
 import PublicDocketDetail from './pages/public/DocketDetail';
 import CommentWizard from './pages/public/CommentWizard';
 import ThankYou from './pages/public/ThankYou';
+import SearchResults from './pages/SearchResults';
 import Security from './pages/Security';
 import About from './pages/About';
 import Onboarding from './pages/Onboarding';
