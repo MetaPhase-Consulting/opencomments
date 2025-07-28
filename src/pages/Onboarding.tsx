@@ -305,20 +305,3 @@ const Onboarding = () => {
 };
 
 export default Onboarding;
-              <a 
-                href="/contact" 
-                className="inline-flex items-center px-8 py-3 text-lg font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"
-              >
-                <Mail className="w-5 h-5 mr-2" />
-                Request Agency Access
-              </a>
-            </div>
-          </section>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  );
-};
-
-export default Onboarding;
