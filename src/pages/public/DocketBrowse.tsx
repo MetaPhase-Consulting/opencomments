@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { usePublicBrowse, DocketSearchFilters } from '../../hooks/usePublicBrowse'
 import PublicLayout from '../../components/PublicLayout'
 import { 
@@ -15,15 +15,22 @@ import {
 } from 'lucide-react'
 
 const DocketBrowse = () => {
-  const { dockets, loading, error, hasMore, browseDockets, loadMore, reset } = usePublicBrowse()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const query = searchParams.get('q') || ''
+  const { dockets, loading, error, hasMore, total, browseDockets, loadMore, reset } = usePublicBrowse()
   const [filters, setFilters] = useState<DocketSearchFilters>({
-    query: '',
-    status: 'all',
-    sort_by: 'newest',
-    limit: 20,
-    offset: 0
+    query: query,
+    status: (searchParams.get('status') as any) || 'all',
+    sort_by: (searchParams.get('sort') as any) || 'newest',
+    limit: parseInt(searchParams.get('limit') || '10'),
+    offset: parseInt(searchParams.get('offset') || '0'),
+    agency_name: searchParams.get('agency') || undefined,
+    state: searchParams.get('state') || undefined,
+    date_from: searchParams.get('date_from') || undefined,
+    date_to: searchParams.get('date_to') || undefined
   })
   const [showFilters, setShowFilters] = useState(false)
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
 
   // Available options
   const stateOptions = [
@@ -47,14 +54,74 @@ const DocketBrowse = () => {
     { value: 'closing_soon', label: 'Closing Soon' },
   ]
 
+  // Function to update URL with all parameters
+  const updateURL = useCallback((newFilters: DocketSearchFilters) => {
+    const newSearchParams = new URLSearchParams()
+    
+    if (newFilters.query) newSearchParams.set('q', newFilters.query)
+    if (newFilters.sort_by) newSearchParams.set('sort', newFilters.sort_by)
+    if (newFilters.limit) newSearchParams.set('limit', newFilters.limit.toString())
+    if (newFilters.offset) newSearchParams.set('offset', newFilters.offset.toString())
+    if (newFilters.agency_name) newSearchParams.set('agency', newFilters.agency_name)
+    if (newFilters.state) newSearchParams.set('state', newFilters.state)
+    if (newFilters.date_from) newSearchParams.set('date_from', newFilters.date_from)
+    if (newFilters.date_to) newSearchParams.set('date_to', newFilters.date_to)
+    if (newFilters.status && newFilters.status !== 'all') newSearchParams.set('status', newFilters.status)
+    
+    setSearchParams(newSearchParams)
+  }, [setSearchParams])
+
+  // Debounced search function
+  const debouncedSearch = useCallback((query: string) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
+
+    const timeout = setTimeout(() => {
+      const newFilters = { ...filters, query, offset: 0 }
+      setFilters(newFilters)
+      updateURL(newFilters)
+      reset()
+      browseDockets(newFilters)
+    }, 300) // 300ms delay
+
+    setSearchTimeout(timeout)
+  }, [filters, browseDockets, reset, updateURL])
+
   useEffect(() => {
-    browseDockets(filters)
-  }, [browseDockets])
+    // Handle URL parameter changes
+    const urlQuery = searchParams.get('q') || ''
+    const urlStatus = (searchParams.get('status') as any) || 'all'
+    const urlSort = (searchParams.get('sort') as any) || 'newest'
+    const urlLimit = parseInt(searchParams.get('limit') || '10')
+    const urlOffset = parseInt(searchParams.get('offset') || '0')
+    const urlAgency = searchParams.get('agency') || undefined
+    const urlState = searchParams.get('state') || undefined
+    const urlDateFrom = searchParams.get('date_from') || undefined
+    const urlDateTo = searchParams.get('date_to') || undefined
+
+    const newFilters = {
+      query: urlQuery,
+      status: urlStatus,
+      sort_by: urlSort,
+      limit: urlLimit,
+      offset: urlOffset,
+      agency_name: urlAgency,
+      state: urlState,
+      date_from: urlDateFrom,
+      date_to: urlDateTo
+    }
+    
+    setFilters(newFilters)
+    reset()
+    browseDockets(newFilters)
+  }, [searchParams, reset, browseDockets])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const newFilters = { ...filters, offset: 0 }
     setFilters(newFilters)
+    updateURL(newFilters)
     reset()
     browseDockets(newFilters)
   }
@@ -62,8 +129,20 @@ const DocketBrowse = () => {
   const handleFilterChange = (key: keyof DocketSearchFilters, value: any) => {
     const newFilters = { ...filters, [key]: value, offset: 0 }
     setFilters(newFilters)
-    reset()
-    browseDockets(newFilters)
+    updateURL(newFilters)
+    
+    // For text fields, use debounced search
+    const textFields = ['agency_name', 'query']
+    if (textFields.includes(key) && typeof value === 'string') {
+      if (value.length >= 2 || value.length === 0) {
+        reset()
+        browseDockets(newFilters)
+      }
+    } else {
+      // For non-text fields (dropdowns, etc.), search immediately
+      reset()
+      browseDockets(newFilters)
+    }
   }
 
   const clearFilters = () => {
@@ -71,10 +150,11 @@ const DocketBrowse = () => {
       query: '', 
       status: 'all' as const, 
       sort_by: 'newest' as const,
-      limit: 20, 
+      limit: 10, 
       offset: 0 
     }
     setFilters(newFilters)
+    updateURL(newFilters)
     reset()
     browseDockets(newFilters)
   }
@@ -262,11 +342,14 @@ const DocketBrowse = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Browse Public Dockets
+            {query && (
+              <span className="text-gray-600 font-normal"> for "{query}"</span>
+            )}
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600">
             Find and participate in open comment periods on government proposals, 
             regulations, and policy changes that affect your community.
           </p>
@@ -283,7 +366,18 @@ const DocketBrowse = () => {
               <input
                 type="search"
                 value={filters.query || ''}
-                onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
+                onChange={(e) => {
+                  const query = e.target.value
+                  setFilters(prev => ({ ...prev, query }))
+                  
+                  // Trigger real-time search after 2+ characters
+                  if (query.length >= 2) {
+                    debouncedSearch(query)
+                  } else if (query.length === 0) {
+                    // Clear search immediately if empty
+                    debouncedSearch('')
+                  }
+                }}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                 placeholder="Search by keyword, topic, or agency..."
                 aria-label="Search dockets"
@@ -373,6 +467,24 @@ const DocketBrowse = () => {
                       className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+
+                  {/* Status - Row 3 */}
+                  <div>
+                    <label htmlFor="status" className="block text-xs font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      id="status"
+                      value={filters.status || 'all'}
+                      onChange={(e) => handleFilterChange('status', e.target.value)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="open">Open</option>
+                      <option value="closed">Closed</option>
+                      <option value="upcoming">Upcoming</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
@@ -408,33 +520,31 @@ const DocketBrowse = () => {
         )}
 
         {/* Results Count & Sort */}
-        <div className="flex items-center justify-between mb-6">
-          {!loading && dockets.length > 0 ? (
+        {!loading && dockets.length > 0 && (
+          <div className="mb-6 flex items-center justify-between">
             <p className="text-gray-600">
-              Showing {dockets.length} {dockets.length === 1 ? 'docket' : 'dockets'}
+              Found {total} {total === 1 ? 'docket' : 'dockets'}
+              {filters.query && ` for "${filters.query}"`}
             </p>
-          ) : (
-            <div></div> // Placeholder for alignment
-          )}
-
-          <div className="flex items-center space-x-2">
-            <label htmlFor="sort-select" className="text-sm text-gray-700">
-              Sort by:
-            </label>
-            <select
-              id="sort-select"
-              value={filters.sort_by}
-              onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            >
-              {sortOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center space-x-2">
+              <label htmlFor="sort_by" className="text-sm font-medium text-gray-700">
+                Sort by:
+              </label>
+              <select
+                id="sort_by"
+                value={filters.sort_by}
+                onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Results */}
         {error && (
@@ -504,8 +614,14 @@ const DocketBrowse = () => {
 
                   <div className="mb-4 flex items-center gap-2">
                     {docket.agency_jurisdiction && (
-                      <Link 
-                        to={`/state/${docket.agency_jurisdiction.toLowerCase().replace(/\s+/g, '-')}`}
+                      <button
+                        onClick={() => {
+                          const newFilters = { ...filters, state: docket.agency_jurisdiction, offset: 0 }
+                          setFilters(newFilters)
+                          updateURL(newFilters)
+                          reset()
+                          browseDockets(newFilters)
+                        }}
                         className="flex-shrink-0"
                         aria-label={`${docket.agency_jurisdiction} state page`}
                       >
@@ -514,14 +630,20 @@ const DocketBrowse = () => {
                           alt={`${docket.agency_jurisdiction} flag`}
                           className="w-6 h-4 object-contain"
                         />
-                      </Link>
+                      </button>
                     )}
-                    <Link 
-                      to={`/agencies/${docket.agency_slug}`}
+                    <button
+                      onClick={() => {
+                        const newFilters = { ...filters, agency_name: docket.agency_name, offset: 0 }
+                        setFilters(newFilters)
+                        updateURL(newFilters)
+                        reset()
+                        browseDockets(newFilters)
+                      }}
                       className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                     >
                       {docket.agency_name}
-                    </Link>
+                    </button>
                   </div>
 
                   <div className="space-y-2 text-xs text-gray-600 mb-4">
@@ -570,25 +692,79 @@ const DocketBrowse = () => {
           </div>
         )}
 
-        {/* Load More */}
-        {hasMore && dockets.length > 0 && (
-          <div className="text-center">
-            <button
-              onClick={() => loadMore(filters)}
-              disabled={loading}
-              className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
-                  Loading...
-                </>
-              ) : (
-                'Load More Results'
-              )}
-            </button>
+        {/* Pagination Controls */}
+        {dockets.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-gray-200">
+            {/* Results Summary */}
+            <div className="text-sm text-gray-600">
+              Showing dockets {(filters.offset || 0) + 1}-{Math.min((filters.offset || 0) + dockets.length, total)} of {total}
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center space-x-2">
+              <label htmlFor="pageSize" className="text-sm text-gray-600">
+                Show:
+              </label>
+              <select
+                id="pageSize"
+                value={filters.limit || 10}
+                onChange={(e) => {
+                  const newLimit = parseInt(e.target.value)
+                  const newFilters = { ...filters, limit: newLimit, offset: 0 }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  browseDockets(newFilters)
+                }}
+                className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="text-sm text-gray-600">per page</span>
+            </div>
+
+            {/* Pagination Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  const newOffset = Math.max(0, (filters.offset || 0) - (filters.limit || 10))
+                  const newFilters = { ...filters, offset: newOffset }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  browseDockets(newFilters)
+                }}
+                disabled={loading || (filters.offset || 0) === 0}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <span className="text-sm text-gray-600">
+                Page {Math.floor((filters.offset || 0) / (filters.limit || 10)) + 1} of {Math.ceil(total / (filters.limit || 10))}
+              </span>
+              
+              <button
+                onClick={() => {
+                  const newOffset = (filters.offset || 0) + (filters.limit || 10)
+                  const newFilters = { ...filters, offset: newOffset }
+                  setFilters(newFilters)
+                  updateURL(newFilters)
+                  reset()
+                  browseDockets(newFilters)
+                }}
+                disabled={loading || !hasMore}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
+
+
       </div>
     </PublicLayout>
   )

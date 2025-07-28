@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useDocketDetail } from '../../hooks/usePublicBrowse';
 import { useAuth } from '../../contexts/AuthContext';
 import PublicLayout from '../../components/PublicLayout';
+import Breadcrumb from '../../components/Breadcrumb';
 import { 
   Calendar, 
   MessageSquare, 
@@ -159,22 +160,14 @@ const DocketDetail = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link
-            to="/dockets"
-            className="inline-flex items-center text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to All Dockets
-          </Link>
-          <span className="mx-2 text-gray-400">→</span>
-          <Link
-            to={`/agencies/${docket.agency_slug}`}
-            className="text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-          >
-            {docket.agency_name}
-          </Link>
-        </div>
+        <Breadcrumb 
+          items={[
+            { label: 'Browse Dockets', href: '/dockets' },
+            { label: docket.agency_jurisdiction || 'State', href: docket.agency_jurisdiction ? `/state/${docket.agency_jurisdiction.toLowerCase().replace(/\s+/g, '-')}` : undefined },
+            { label: docket.agency_name, href: `/agencies/${docket.agency_slug}` },
+            { label: docket.title, current: true }
+          ]}
+        />
 
         {/* Hero Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">

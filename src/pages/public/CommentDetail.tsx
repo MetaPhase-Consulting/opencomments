@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useCommentDetail } from '../../hooks/useCommentSearch'
 import PublicLayout from '../../components/PublicLayout'
+import Breadcrumb from '../../components/Breadcrumb'
 import { 
   ChevronLeft, 
   Calendar, 
@@ -101,15 +102,15 @@ const CommentDetail = () => {
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to Search Results
-          </button>
-        </div>
+        <Breadcrumb 
+          items={[
+            { label: 'Search Comments', href: '/comments' },
+            { label: comment?.agency_jurisdiction || 'State', href: comment?.agency_jurisdiction ? `/state/${comment.agency_jurisdiction.toLowerCase().replace(/\s+/g, '-')}` : undefined },
+            { label: comment?.agency_name || 'Agency', href: comment?.agency_name ? `/agencies/${comment.agency_name.toLowerCase().replace(/\s+/g, '-')}` : undefined },
+            { label: comment?.docket_title || 'Docket', href: comment?.docket_slug ? `/dockets/${comment.docket_slug}` : undefined },
+            { label: 'Comment', current: true }
+          ]}
+        />
 
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">

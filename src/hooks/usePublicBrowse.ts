@@ -17,6 +17,7 @@ export interface PublicDocket {
   comment_count: number
   created_at: string
   rank?: number
+  total_count?: number
 }
 
 export interface DocketSearchFilters {
@@ -107,7 +108,7 @@ export const usePublicBrowse = () => {
         p_date_from: filters.date_from ? new Date(filters.date_from).toISOString() : null,
         p_date_to: filters.date_to ? new Date(filters.date_to).toISOString() : null,
         p_sort_by: filters.sort_by || 'newest',
-        p_limit: filters.limit || 20,
+        p_limit: filters.limit || 10,
         p_offset: filters.offset || 0
       })
 
@@ -125,8 +126,13 @@ export const usePublicBrowse = () => {
         setDockets(prev => [...prev, ...results])
       }
 
-      setHasMore(results.length === (filters.limit || 20))
-      setTotal(prev => filters.offset === 0 ? results.length : prev + results.length)
+      setHasMore(results.length === (filters.limit || 10))
+      // Use the total_count from the first result if available, otherwise fall back to previous logic
+      if (results.length > 0 && results[0].total_count !== undefined) {
+        setTotal(results[0].total_count)
+      } else {
+        setTotal(prev => filters.offset === 0 ? results.length : prev + results.length)
+      }
 
     } catch (err) {
       console.error('Browse error:', err)
@@ -173,45 +179,21 @@ export const useAgencyProfile = () => {
     setError(null)
 
     try {
-      // Fetch agency data directly
-      const { data: agencyData, error: agencyError } = await supabase
-        .from('agencies')
-        .select('*')
-        .eq('slug', agencySlug)
-        .single()
+      const { data, error: fetchError } = await supabase.rpc('get_agency_public_profile', {
+        p_agency_slug: agencySlug
+      })
 
-      if (agencyError || !agencyData) {
-        console.error('Agency fetch error:', agencyError)
+      if (fetchError || !data || data.length === 0) {
+        console.error('Agency fetch error:', fetchError)
         setError('Agency not found')
         return
       }
 
-      // Fetch dockets for this agency
-      const { data: docketsData, error: docketsError } = await supabase
-        .from('dockets')
-        .select(`
-          id,
-          title,
-          slug,
-          status,
-          open_at,
-          close_at,
-          tags,
-          created_at,
-          comments!inner(id)
-        `)
-        .eq('agency_id', agencyData.id)
-        .in('status', ['open', 'closed'])
-        .order('created_at', { ascending: false })
-
-      if (docketsError) {
-        console.error('Dockets fetch error:', docketsError)
-        setError('Failed to load agency dockets')
-        return
-      }
-
-      // Transform the data to match the expected format
-      const transformedDockets = docketsData?.map(docket => ({
+      const agencyData = data[0]
+      
+      // Transform the dockets data
+      const dockets = agencyData.dockets || []
+      const transformedDockets = dockets.map((docket: any) => ({
         id: docket.id,
         title: docket.title,
         slug: docket.slug,
@@ -219,9 +201,9 @@ export const useAgencyProfile = () => {
         open_at: docket.open_at,
         close_at: docket.close_at,
         tags: docket.tags || [],
-        comment_count: docket.comments?.length || 0,
+        comment_count: docket.comment_count || 0,
         created_at: docket.created_at
-      })) || []
+      }))
 
       // Create the agency profile object
       const agencyProfile: AgencyProfile = {

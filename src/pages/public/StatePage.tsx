@@ -219,19 +219,40 @@ const StatePage = () => {
         {/* Hero Section */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                {stateInfo.name}
-              </h1>
-              <p className="text-xl text-gray-600 mb-6">
-                {stateInfo.description}
-              </p>
-              {stateInfo.capital && (
-                <div className="flex items-center justify-center text-gray-500">
-                  <MapPin className="w-4 h-4 mr-2" />
-                  <span>Capital: {stateInfo.capital}</span>
-                </div>
-              )}
+            <div className="flex items-center justify-between">
+              {/* Left side - State flag */}
+              <div className="flex-1 flex justify-center">
+                <img 
+                  src={`/states/flag-${stateInfo.code.toLowerCase()}.svg`}
+                  alt={`${stateInfo.name} flag`}
+                  className="w-32 h-32 object-contain"
+                />
+              </div>
+              
+              {/* Center - State info */}
+              <div className="flex-1 text-center">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                  {stateInfo.name}
+                </h1>
+                <p className="text-xl text-gray-600 mb-6">
+                  {stateInfo.description}
+                </p>
+                {stateInfo.capital && (
+                  <div className="flex items-center justify-center text-gray-500">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    <span>Capital: {stateInfo.capital}</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Right side - State outline */}
+              <div className="flex-1 flex justify-center">
+                <img 
+                  src={`/states/outline-${stateInfo.code.toLowerCase()}.svg`}
+                  alt={`${stateInfo.name} outline`}
+                  className="w-32 h-32 object-contain opacity-20"
+                />
+              </div>
             </div>
           </div>
         </div>

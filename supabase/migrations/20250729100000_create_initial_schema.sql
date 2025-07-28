@@ -36,7 +36,7 @@ CREATE TABLE dockets (
     close_at timestamptz,
     comment_deadline timestamptz,
     tags text[],
-    search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', title || ' ' || description)) STORED,
+    search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', title || ' ' || COALESCE(description, '') || ' ' || COALESCE(summary, ''))) STORED,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
@@ -50,7 +50,7 @@ CREATE TABLE comments (
     commenter_name text,
     commenter_organization text,
     comment_position text,
-    search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', content)) STORED,
+    search_vector tsvector GENERATED ALWAYS AS (to_tsvector('english', content || ' ' || COALESCE(commenter_name, '') || ' ' || COALESCE(commenter_organization, ''))) STORED,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
@@ -90,6 +90,10 @@ CREATE OR REPLACE FUNCTION search_comments(
   p_date_to         timestamptz DEFAULT NULL,
   p_commenter_type  text DEFAULT NULL,
   p_position        text DEFAULT NULL,
+  p_comment_filter  text DEFAULT NULL,
+  p_filing_company  text DEFAULT NULL,
+  p_comment_id      text DEFAULT NULL,
+  p_docket_id       text DEFAULT NULL,
   p_sort_by         text DEFAULT 'newest',
   p_limit           integer DEFAULT 20,
   p_offset          integer DEFAULT 0
@@ -155,6 +159,10 @@ BEGIN
     AND  (p_date_to   IS NULL OR c.created_at <= p_date_to)
     AND  (p_commenter_type IS NULL OR COALESCE(ci.representation,'individual') = p_commenter_type)
     AND  (p_position IS NULL OR COALESCE(c.comment_position,'not_specified') = p_position)
+    AND  (p_comment_filter IS NULL OR c.commenter_name ILIKE '%'||p_comment_filter||'%')
+    AND  (p_filing_company IS NULL OR c.commenter_organization ILIKE '%'||p_filing_company||'%')
+    AND  (p_comment_id IS NULL OR c.id::text = p_comment_id)
+    AND  (p_docket_id IS NULL OR d.id::text = p_docket_id)
   ORDER  BY
     CASE WHEN p_sort_by = 'newest' THEN c.created_at END DESC,
     CASE WHEN p_sort_by = 'oldest' THEN c.created_at END ASC,

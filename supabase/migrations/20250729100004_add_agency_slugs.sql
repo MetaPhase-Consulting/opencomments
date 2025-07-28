@@ -2,17 +2,17 @@
 
 -- Add slugs to existing agencies
 UPDATE agencies 
-SET slug = 'dot' 
-WHERE name = 'Department of Transportation';
+SET slug = 'california-department-of-transportation' 
+WHERE name = 'California Department of Transportation';
 
 UPDATE agencies 
-SET slug = 'epa' 
-WHERE name = 'Environmental Protection Agency';
+SET slug = 'texas-department-of-transportation' 
+WHERE name = 'Texas Department of Transportation';
 
 UPDATE agencies 
-SET slug = 'doe' 
-WHERE name = 'Department of Energy';
+SET slug = 'new-york-state-department-of-environmental-conservation' 
+WHERE name = 'New York State Department of Environmental Conservation';
 
 UPDATE agencies 
-SET slug = 'caltrans' 
-WHERE name = 'California Department of Transportation'; 
+SET slug = 'florida-department-of-environmental-protection' 
+WHERE name = 'Florida Department of Environmental Protection'; 
