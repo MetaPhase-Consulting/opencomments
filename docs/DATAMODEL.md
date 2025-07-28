@@ -48,6 +48,65 @@ updated_at      timestamptz DEFAULT now()
 ```
 *Many-to-many relationship between users and agencies with roles*
 
+## 🔧 Platform Administration
+
+### Platform Roles
+
+**platform_roles**
+```sql
+user_id         uuid PRIMARY KEY (references profiles)
+role            text CHECK (role IN ('super_owner', 'super_user'))
+created_at      timestamptz DEFAULT now()
+created_by      uuid REFERENCES profiles(id)
+updated_at      timestamptz DEFAULT now()
+updated_by      uuid REFERENCES profiles(id)
+```
+*Platform-level administrative roles for system management*
+
+### Platform Role Definitions
+
+**Super Owner**
+- Full access to all agency data, users, roles, and comments
+- Can change any role (including agency Owner)
+- Can create new agencies and invite first user
+- Can invite and remove Super Users
+- Can impersonate agency users (optional)
+- Restricted to approved email domains (@metaphaseconsulting.com, @metaphase.tech, @opencomments.us)
+
+**Super User**
+- Can create new agencies
+- Can invite first Owner to a new agency
+- Can invite additional users to existing agencies (except cannot assign/change Owner)
+- Cannot see agency content (dockets, comments, settings)
+- Restricted to approved email domains (@metaphaseconsulting.com, @metaphase.tech, @opencomments.us)
+
+### Platform Functions
+
+**create_agency_with_owner()**
+- Creates new agency with initial owner
+- Validates government email domains (.gov, .edu)
+- Generates unique public slug
+- Sets up initial agency member relationship
+
+**platform_invite_user_to_agency()**
+- Invites users to existing agencies
+- Creates user profile if doesn't exist
+- Enforces role restrictions (Super Users cannot assign Owner role)
+- Sets up agency membership
+
+### Security Model
+
+**Domain Restrictions**
+- Platform roles restricted to approved domains only
+- Government agencies must use .gov or .edu domains
+- Email domain validation enforced at database level
+
+**Access Control**
+- Row Level Security (RLS) enforces platform role permissions
+- Super Owners can access all agency data
+- Super Users limited to agency creation and user invitation
+- Platform role checks integrated throughout application
+
 ### Comment System
 
 **dockets**
