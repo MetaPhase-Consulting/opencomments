@@ -130,18 +130,18 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
-                    href="/onboarding"
+                    href="/new-onboarding"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Onboarding
+                    New Onboarding
                   </a>
                 </li>
                 <li>
                   <a
-                    href="/user-guide"
+                    href="/government-user-guide"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Agency Admin Guide
+                    Government User Guide
                   </a>
                 </li>
               </ul>
