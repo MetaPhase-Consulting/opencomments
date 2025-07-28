@@ -304,22 +304,14 @@ const AgencyProfile = () => {
                         )}
                         <div className="flex items-center">
                           <MessageSquare className="w-4 h-4 mr-1" />
-                          {docket.comment_count} comments
+                          <Link 
+                            to={`/dockets/${docket.slug}#comments`}
+                            className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                          >
+                            {docket.comment_count} comments
+                          </Link>
                         </div>
                       </div>
-
-                      {docket.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {docket.tags.map(tag => (
-                            <span
-                              key={tag}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                     
                     <div className="flex items-center space-x-3 ml-6">

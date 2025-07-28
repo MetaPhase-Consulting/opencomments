@@ -27,7 +27,7 @@ export interface DocketSearchFilters {
   tags?: string[]
   date_from?: string
   date_to?: string
-  sort_by?: 'newest' | 'closing' | 'title' | 'agency'
+  sort_by?: 'newest' | 'oldest' | 'title_asc' | 'title_desc' | 'agency_asc' | 'agency_desc' | 'closing_soon'
   limit?: number
   offset?: number
 }

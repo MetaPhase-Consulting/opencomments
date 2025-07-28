@@ -32,6 +32,13 @@ const DocketDetail = () => {
     }
   }, [slug, fetchDocket]);
 
+  useEffect(() => {
+    // Check if URL has #comments hash and switch to comments tab
+    if (window.location.hash === '#comments') {
+      setActiveTab('comments');
+    }
+  }, []);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -63,9 +70,34 @@ const DocketDetail = () => {
     return new Date(docket.close_at) > new Date();
   };
 
-  const copyShareUrl = () => {
-    navigator.clipboard.writeText(window.location.href);
-    // TODO: Show toast notification
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // TODO: Show toast notification
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+  };
+
+  const sharePage = async () => {
+    const url = window.location.href;
+    const title = docket?.title || 'Docket Details';
+    
+    if (navigator.share) {
+      // Mobile - use native share
+      try {
+        await navigator.share({
+          title: title,
+          url: url
+        });
+      } catch (err) {
+        // User cancelled or error - fallback to clipboard
+        copyToClipboard(url);
+      }
+    } else {
+      // Desktop - copy to clipboard
+      copyToClipboard(url);
+    }
   };
 
   if (loading) {
@@ -189,22 +221,14 @@ const DocketDetail = () => {
                 )}
                 <div className="flex items-center">
                   <MessageSquare className="w-4 h-4 mr-1" />
-                  {docket.comment_count} public comments
+                  <button 
+                    onClick={() => setActiveTab('comments')}
+                    className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
+                    {docket.comment_count} public comments
+                  </button>
                 </div>
               </div>
-
-              {docket.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {docket.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}
@@ -225,7 +249,7 @@ const DocketDetail = () => {
               )}
 
               <button
-                onClick={copyShareUrl}
+                onClick={sharePage}
                 className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <Share2 className="w-5 h-5 mr-2" />
@@ -326,37 +350,7 @@ const DocketDetail = () => {
                   </div>
                 )}
 
-                {/* Comment Guidelines */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <h2 className="text-lg font-semibold text-blue-900 mb-3">How to Submit Effective Comments</h2>
-                  <ul className="space-y-2 text-sm text-blue-800">
-                    <li>• Be specific about which aspects of the proposal you support or oppose</li>
-                    <li>• Provide factual information and evidence to support your position</li>
-                    <li>• Share how the proposal would affect you, your family, or your community</li>
-                    <li>• Suggest specific changes or alternatives if you have concerns</li>
-                    <li>• Keep comments respectful and focused on the proposal</li>
-                  </ul>
-                  
-                  <div className="mt-4 pt-4 border-t border-blue-200">
-                    <h3 className="text-sm font-medium text-blue-900 mb-2">Comment Guidelines</h3>
-                    <div className="text-xs text-blue-700">
-                      <p>• Account registration required for submission</p>
-                      <p>• Comments are reviewed before publication</p>
-                      <p>• Keep comments relevant and respectful</p>
-                    </div>
-                  </div>
-                  
-                  {commentingOpen && (
-                    <div className="mt-4">
-                      <Link
-                        to={getCommentUrl()}
-                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-800 transition-colors"
-                      >
-                        Submit Your Comment
-                      </Link>
-                    </div>
-                  )}
-                </div>
+
               </div>
             )}
 

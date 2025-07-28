@@ -40,6 +40,11 @@ const DocketBrowse = () => {
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'oldest', label: 'Oldest First' },
+    { value: 'title_asc', label: 'A-Z (Title)' },
+    { value: 'title_desc', label: 'Z-A (Title)' },
+    { value: 'agency_asc', label: 'A-Z (Agency)' },
+    { value: 'agency_desc', label: 'Z-A (Agency)' },
+    { value: 'closing_soon', label: 'Closing Soon' },
   ]
 
   useEffect(() => {
@@ -129,6 +134,64 @@ const DocketBrowse = () => {
       }
     }
     return status.charAt(0).toUpperCase() + status.slice(1)
+  }
+
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc',
+      'Federal': 'us'
+    }
+    return stateAbbreviations[stateName] || 'us'
   }
 
   const hasActiveFilters = () => {
@@ -354,18 +417,23 @@ const DocketBrowse = () => {
             <div></div> // Placeholder for alignment
           )}
 
-          <select
-            value={filters.sort_by}
-            onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Sort by"
-          >
-            {sortOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center space-x-2">
+            <label htmlFor="sort-select" className="text-sm text-gray-700">
+              Sort by:
+            </label>
+            <select
+              id="sort-select"
+              value={filters.sort_by}
+              onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              {sortOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Results */}
@@ -378,15 +446,7 @@ const DocketBrowse = () => {
           </div>
         )}
 
-        {/* Results Count */}
-        {!loading && dockets.length > 0 && (
-          <div className="mb-6">
-            <p className="text-gray-600">
-              Showing {dockets.length} {dockets.length === 1 ? 'result' : 'results'}
-              {filters.query && ` for "${filters.query}"`}
-            </p>
-          </div>
-        )}
+
 
         {/* Loading State */}
         {loading && dockets.length === 0 && (
@@ -437,46 +497,62 @@ const DocketBrowse = () => {
                         {docket.summary}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(docket.status, docket.close_at)}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ml-3 flex-shrink-0 ${getStatusBadge(docket.status, docket.close_at)}`}>
                       {getStatusText(docket.status, docket.close_at)}
                     </span>
+                  </div>
+
+                  <div className="mb-4 flex items-center gap-2">
+                    {docket.agency_jurisdiction && (
+                      <Link 
+                        to={`/state/${docket.agency_jurisdiction.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="flex-shrink-0"
+                        aria-label={`${docket.agency_jurisdiction} state page`}
+                      >
+                        <img 
+                          src={`/states/flag-${getStateAbbreviation(docket.agency_jurisdiction)}.svg`}
+                          alt={`${docket.agency_jurisdiction} flag`}
+                          className="w-6 h-4 object-contain"
+                        />
+                      </Link>
+                    )}
                     <Link 
                       to={`/agencies/${docket.agency_slug}`}
-                      className="text-sm text-gray-500 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      className="text-sm font-semibold text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                     >
                       {docket.agency_name}
                     </Link>
                   </div>
 
-                  {docket.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {docket.tags.slice(0, 3).map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {docket.tags.length > 3 && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          +{docket.tags.length - 3} more
-                        </span>
+                  <div className="space-y-2 text-xs text-gray-600 mb-4">
+                    <div className="flex items-center">
+                      <MessageSquare className="w-3 h-3 mr-1" />
+                      <Link 
+                        to={`/dockets/${docket.slug}#comments`}
+                        className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      >
+                        {docket.comment_count} comments
+                      </Link>
+                    </div>
+                    <div className="flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      Opened {formatDate(docket.open_at)}
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {docket.close_at ? (
+                        getDaysRemaining(docket.close_at) !== null ? (
+                          getDaysRemaining(docket.close_at)! <= 0 ? (
+                            'Closed'
+                          ) : (
+                            `${getDaysRemaining(docket.close_at)} days left`
+                          )
+                        ) : (
+                          `Closes ${formatDate(docket.close_at)}`
+                        )
+                      ) : (
+                        'Open-ended'
                       )}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      {docket.comment_count} comments
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {docket.close_at ? `Closes ${formatDate(docket.close_at)}` : 'Open-ended'}
                     </div>
                   </div>
 

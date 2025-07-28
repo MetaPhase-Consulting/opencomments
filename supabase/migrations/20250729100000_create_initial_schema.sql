@@ -328,7 +328,12 @@ BEGIN
     AND (p_query IS NULL OR d.search_vector @@ plainto_tsquery('english', p_query))
   ORDER BY
     CASE WHEN p_sort_by = 'newest' THEN d.created_at END DESC,
-    CASE WHEN p_sort_by = 'oldest' THEN d.created_at END ASC
+    CASE WHEN p_sort_by = 'oldest' THEN d.created_at END ASC,
+    CASE WHEN p_sort_by = 'title_asc' THEN d.title END ASC,
+    CASE WHEN p_sort_by = 'title_desc' THEN d.title END DESC,
+    CASE WHEN p_sort_by = 'agency_asc' THEN a.name END ASC,
+    CASE WHEN p_sort_by = 'agency_desc' THEN a.name END DESC,
+    CASE WHEN p_sort_by = 'closing_soon' THEN d.close_at END ASC
   LIMIT p_limit OFFSET p_offset;
 END;
 $$;
@@ -349,22 +354,4 @@ CREATE POLICY "Public can read open dockets" ON dockets FOR SELECT USING (status
 CREATE POLICY "Public can read approved comments" ON comments FOR SELECT USING (status = 'approved');
 CREATE POLICY "Users can create comments on open dockets" ON comments FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND (SELECT status FROM dockets WHERE id = docket_id) = 'open');
 
-/* ----------------------------------------------------------------------
-   5.  Seed Data
-   ---------------------------------------------------------------------- */
-INSERT INTO agencies (id,name,jurisdiction,slug)
-VALUES ('00000000-0000-4000-8000-000000000001','Demo Agency','Demo State', 'demo-agency')
-ON CONFLICT(id) DO NOTHING;
-
-INSERT INTO dockets (id,agency_id,title,slug,status,tags,open_at,close_at,comment_deadline)
-VALUES ('00000000-0000-4000-8000-000000000002',
-        '00000000-0000-4000-8000-000000000001',
-        'Demo Docket','demo-docket','open',
-        ARRAY['demo'], now(), now()+interval '30 days', now()+interval '30 days')
-ON CONFLICT(id) DO NOTHING;
-
-INSERT INTO comments (id,docket_id,content,status,commenter_name,created_at,comment_position)
-VALUES ('00000000-0000-4000-8000-000000000003',
-        '00000000-0000-4000-8000-000000000002',
-        'Initial comment for search test','approved','Alice',now(), 'neutral')
-ON CONFLICT(id) DO NOTHING; 
+ 

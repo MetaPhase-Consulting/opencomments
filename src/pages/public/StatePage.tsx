@@ -117,8 +117,7 @@ const StatePage = () => {
             name,
             slug,
             jurisdiction,
-            description,
-            dockets(id)
+            description
           `)
           .eq('jurisdiction', state.name)
           .is('deleted_at', null)
@@ -129,16 +128,46 @@ const StatePage = () => {
           return
         }
 
-        // Transform the data to include counts
-        const transformedAgencies = agencyData?.map((agency: any) => ({
-          id: agency.id,
-          name: agency.name,
-          slug: agency.slug,
-          jurisdiction: agency.jurisdiction,
-          description: agency.description,
-          docket_count: agency.dockets?.length || 0,
-          comment_count: 0 // This would need a separate query to get comment counts
-        })) || []
+        // Transform the data and fetch counts for each agency
+        const transformedAgencies = await Promise.all(
+          agencyData?.map(async (agency: any) => {
+            // Get docket count for this agency
+            const { count: docketCount } = await supabase
+              .from('dockets')
+              .select('*', { count: 'exact', head: true })
+              .eq('agency_id', agency.id)
+              .eq('status', 'open')
+
+            // Get comment count for this agency (approved comments only)
+            // First get the docket IDs for this agency
+            const { data: docketIds } = await supabase
+              .from('dockets')
+              .select('id')
+              .eq('agency_id', agency.id)
+              .eq('status', 'open')
+            
+            let commentCount = 0
+            if (docketIds && docketIds.length > 0) {
+              const docketIdList = docketIds.map((docket: any) => docket.id)
+              const { count } = await supabase
+                .from('comments')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'approved')
+                .in('docket_id', docketIdList)
+              commentCount = count || 0
+            }
+            
+            return {
+              id: agency.id,
+              name: agency.name,
+              slug: agency.slug,
+              jurisdiction: agency.jurisdiction,
+              description: agency.description,
+              docket_count: docketCount || 0,
+              comment_count: commentCount
+            }
+          }) || []
+        )
 
         setAgencies(transformedAgencies)
       } catch (err) {
