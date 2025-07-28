@@ -42,11 +42,6 @@ const CommentSearch = () => {
     'Wisconsin', 'Wyoming', 'District of Columbia'
   ]
 
-  const availableTags = [
-    'Budget', 'Transportation', 'Housing', 'Environment', 'Public Safety',
-    'Parks & Recreation', 'Zoning', 'Economic Development', 'Health', 'Education'
-  ]
-
   const commenterTypeOptions = [
     { value: 'individual', label: 'Individual' },
     { value: 'organization', label: 'Organization' },
@@ -58,7 +53,8 @@ const CommentSearch = () => {
     { value: 'support', label: 'Support' },
     { value: 'oppose', label: 'Oppose' },
     { value: 'neutral', label: 'Neutral' },
-    { value: 'unclear', label: 'Unclear' }
+    { value: 'unclear', label: 'Unclear' },
+    { value: 'not_specified', label: 'Not Specified' }
   ]
 
   const sortOptions = [
@@ -105,13 +101,6 @@ const CommentSearch = () => {
     searchComments(newFilters)
   }
 
-  const toggleTag = (tag: string) => {
-    const currentTags = filters.tags || []
-    const newTags = currentTags.includes(tag)
-      ? currentTags.filter(t => t !== tag)
-      : [...currentTags, tag]
-    handleFilterChange('tags', newTags)
-  }
 
   const clearFilters = () => {
     const newFilters = { query: '', sort_by: 'newest' as const, limit: 20, offset: 0 }
@@ -142,16 +131,6 @@ const CommentSearch = () => {
       })
     }
 
-    if (filters.tags?.length) {
-      filters.tags.forEach(tag => {
-        chips.push({
-          key: `tag_${tag}`,
-          label: 'Topic',
-          value: tag,
-          onRemove: () => toggleTag(tag)
-        })
-      })
-    }
 
     if (filters.date_from || filters.date_to) {
       const dateRange = [filters.date_from, filters.date_to].filter(Boolean).join(' to ')
@@ -224,7 +203,7 @@ const CommentSearch = () => {
   const hasActiveFilters = () => {
     return !!(filters.agency_name || filters.state || filters.tags?.length || 
               filters.date_from || filters.date_to || filters.commenter_type || 
-              filters.has_attachment !== undefined || filters.position)
+              filters.position)
   }
 
   return (
@@ -272,182 +251,128 @@ const CommentSearch = () => {
                 className="inline-flex items-center text-sm text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
               >
                 <Filter className="w-4 h-4 mr-1" />
-                Advanced Filters
+                Advanced Search
                 <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </button>
 
-              <div className="flex items-center space-x-4">
-                <select
-                  value={filters.sort_by}
-                  onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Sort by"
-                >
-                  {sortOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="submit"
-                  className="inline-flex items-center px-6 py-2 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Search
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="inline-flex items-center px-6 py-2 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Search
+              </button>
             </div>
 
             {/* Advanced Filters */}
             {showFilters && (
               <div className="pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Agency */}
-                  <div>
-                    <label htmlFor="agency_name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Agency
-                    </label>
-                    <input
-                      type="text"
-                      id="agency_name"
-                      value={filters.agency_name || ''}
-                      onChange={(e) => handleFilterChange('agency_name', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Department of Transportation"
-                    />
-                  </div>
-
-                  {/* State */}
-                  <div>
-                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                      State
-                    </label>
-                    <select
-                      id="state"
-                      value={filters.state || ''}
-                      onChange={(e) => handleFilterChange('state', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All States</option>
-                      {stateOptions.map(state => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Commenter Type */}
-                  <div>
-                    <label htmlFor="commenter_type" className="block text-sm font-medium text-gray-700 mb-1">
-                      Commenter Type
-                    </label>
-                    <select
-                      id="commenter_type"
-                      value={filters.commenter_type || ''}
-                      onChange={(e) => handleFilterChange('commenter_type', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All Types</option>
-                      {commenterTypeOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Date From */}
-                  <div>
-                    <label htmlFor="date_from" className="block text-sm font-medium text-gray-700 mb-1">
-                      Date From
-                    </label>
-                    <input
-                      type="date"
-                      id="date_from"
-                      value={filters.date_from || ''}
-                      onChange={(e) => handleFilterChange('date_from', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Date To */}
-                  <div>
-                    <label htmlFor="date_to" className="block text-sm font-medium text-gray-700 mb-1">
-                      Date To
-                    </label>
-                    <input
-                      type="date"
-                      id="date_to"
-                      value={filters.date_to || ''}
-                      onChange={(e) => handleFilterChange('date_to', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Position */}
-                  <div>
-                    <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
-                      Position
-                    </label>
-                    <select
-                      id="position"
-                      value={filters.position || ''}
-                      onChange={(e) => handleFilterChange('position', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All Positions</option>
-                      {positionOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Topic Tags */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Topic Tags
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags.map(tag => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleTag(tag)}
-                        className={`px-3 py-1 text-sm rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          (filters.tags || []).includes(tag)
-                            ? 'bg-blue-100 border-blue-300 text-blue-800'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
+                <div className="space-y-4">
+                  {/* Agency and State */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="agency_name" className="block text-sm font-medium text-gray-700 mb-1">
+                        Agency
+                      </label>
+                      <input
+                        type="text"
+                        id="agency_name"
+                        value={filters.agency_name || ''}
+                        onChange={(e) => handleFilterChange('agency_name', e.target.value || undefined)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Department of Transportation"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                        State
+                      </label>
+                      <select
+                        id="state"
+                        value={filters.state || ''}
+                        onChange={(e) => handleFilterChange('state', e.target.value || undefined)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        {tag}
-                      </button>
-                    ))}
+                        <option value="">All States</option>
+                        {stateOptions.map(state => (
+                          <option key={state} value={state}>
+                            {state}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
+                  {/* Date Range */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="date_from" className="block text-sm font-medium text-gray-700 mb-1">
+                        From Date
+                      </label>
+                      <input
+                        type="date"
+                        id="date_from"
+                        value={filters.date_from || ''}
+                        onChange={(e) => handleFilterChange('date_from', e.target.value || undefined)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="date_to" className="block text-sm font-medium text-gray-700 mb-1">
+                        To Date
+                      </label>
+                      <input
+                        type="date"
+                        id="date_to"
+                        value={filters.date_to || ''}
+                        onChange={(e) => handleFilterChange('date_to', e.target.value || undefined)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
 
-                {/* Has Attachment */}
-                <div className="mt-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={filters.has_attachment === true}
-                      onChange={(e) => handleFilterChange('has_attachment', e.target.checked ? true : undefined)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">
-                      Only show comments with attachments
-                    </span>
-                  </label>
+                  {/* Commenter Type and Position */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="commenter_type" className="block text-sm font-medium text-gray-700 mb-1">
+                        Commenter Type
+                      </label>
+                      <select
+                        id="commenter_type"
+                        value={filters.commenter_type || ''}
+                        onChange={(e) => handleFilterChange('commenter_type', e.target.value || undefined)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">All Types</option>
+                        {commenterTypeOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
+                        Position
+                      </label>
+                      <select
+                        id="position"
+                        value={filters.position || ''}
+                        onChange={(e) => handleFilterChange('position', e.target.value || undefined)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">All Positions</option>
+                        {positionOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Clear Filters */}
                 {hasActiveFilters() && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="pt-4 border-t border-gray-200">
                     <button
                       type="button"
                       onClick={clearFilters}
@@ -516,11 +441,28 @@ const CommentSearch = () => {
 
         {/* Results Count */}
         {!loading && results.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <p className="text-gray-600">
               Showing {results.length} {results.length === 1 ? 'comment' : 'comments'}
               {filters.query && ` for "${filters.query}"`}
             </p>
+            <div className="flex items-center space-x-2">
+              <label htmlFor="sort_by" className="text-sm font-medium text-gray-700">
+                Sort by:
+              </label>
+              <select
+                id="sort_by"
+                value={filters.sort_by}
+                onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
 

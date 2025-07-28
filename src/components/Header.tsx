@@ -85,10 +85,10 @@ const Header = () => {
           <div className="flex items-center justify-between h-full">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold">
+              <a href="/" className="text-xl font-bold hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded">
                 <span style={{ color: '#D9253A' }}>Open</span>
                 <span style={{ color: '#0050D8' }}>Comments</span>
-              </h1>
+              </a>
             </div>
 
             {/* Center Navigation */}

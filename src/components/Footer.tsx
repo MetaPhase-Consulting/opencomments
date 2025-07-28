@@ -218,8 +218,15 @@ const Footer = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-300">
               <div className="flex items-center mb-4 md:mb-0">
-                <Github className="w-4 h-4 mr-2" />
-                <span>Open Source</span>
+                <a 
+                  href="https://github.com/brianfunk/opencomments" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
+                >
+                  <Github className="w-4 h-4 mr-2" />
+                  <span>Open Source</span>
+                </a>
                 <span className="mx-3">|</span>
                 <span>Built by </span>
                 <a 

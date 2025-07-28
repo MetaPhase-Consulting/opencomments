@@ -5,7 +5,7 @@ const CalloutBanner = () => {
     <section className="py-16 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#0050D8' }}>
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-3xl font-bold text-white mb-6">
-          Open source and free for governments. Get started today.
+          Open source and free for governments. Get started and onboard your agency today.
         </h2>
         <a
           href="/onboarding"
