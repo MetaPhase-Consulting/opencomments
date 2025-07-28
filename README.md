@@ -2,17 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
+[![CivicTech](https://img.shields.io/badge/Civic-Tech-1f7a8c)](https://github.com/brianfunk/opencomments)
 [![Built by MetaPhase](https://img.shields.io/badge/Built%20by-MetaPhase-fb641f)](https://metaphase.tech)
-[![CivicTech](https://img.shields.io/badge/CivicTech-Government%20Platform-1f7a8c)](https://github.com/brianfunk/opencomments)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/4775fe17-b688-41cc-9426-917c8a5a94b2/deploy-status)](https://app.netlify.com/projects/opencomments/deploys)
-[![CI/CD](https://github.com/brianfunk/opencomments/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/brianfunk/opencomments/actions)
+[![LinkedIn](https://img.shields.io/badge/Linked-In-0077b5)](https://www.linkedin.com/company/metaphase-consulting-llc/)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/4775fe17-b688-41cc-9426-917c8a5a94b2/deploy-status?branch=dev)](https://app.netlify.com/projects/opencomments/deploys)
 [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-green)](https://www.w3.org/WAI/WCAG21/quickref/)
 [![Security](https://img.shields.io/badge/Security-SOC%202-blue)](https://netlify.com/security)
-[![Supabase](https://img.shields.io/badge/Powered%20by-Supabase-3ecf8e)](https://supabase.com)
-[![OAuth](https://img.shields.io/badge/OAuth-GitHub%20%7C%20Google-4285f4)](https://github.com/brianfunk/opencomments)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-MetaPhase-0077b5)](https://www.linkedin.com/company/metaphase-consulting-llc/)
-[![Uptime](https://img.shields.io/badge/Uptime-99.9%25-brightgreen)](https://status.opencomments.us)
-[![Version](https://img.shields.io/github/package-json/v/brianfunk/opencomments)](https://github.com/brianfunk/opencomments/releases)
+[![Uptime](https://img.shields.io/badge/Uptime-99.99%25-brightgreen)](https://status.opencomments.us)
 
 # OpenComments
 
