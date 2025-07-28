@@ -75,7 +75,7 @@ const Footer = () => {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="/dockets"
+                    href="/search"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
                     Search Comments
@@ -86,15 +86,7 @@ const Footer = () => {
                     href="/dockets"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
-                    Submit a Comment
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/dockets"
-                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
-                  >
-                    Browse All Dockets
+                    Browse Dockets
                   </a>
                 </li>
                 <li>
