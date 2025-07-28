@@ -272,49 +272,39 @@ const Onboarding = () => {
           </section>
 
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">How long does setup take?</h3>
-                <p className="text-gray-700">
-                  Most agencies are up and running within one week of submitting their request. 
-                  Complex customizations may take additional time.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Is there really no cost?</h3>
-                <p className="text-gray-700">
-                  OpenComments is provided free to government agencies as a public service. 
-                  There are no licensing fees, setup costs, or hidden charges.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">What about data ownership?</h3>
-                <p className="text-gray-700">
-                  Your agency retains full ownership of all comment data. You can export 
-                  your data at any time and are not locked into the platform.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Can we customize the appearance?</h3>
-                <p className="text-gray-700">
-                  Yes, we can customize colors, logos, and certain interface elements to 
-                  match your agency's branding while maintaining accessibility standards.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="mb-8">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
               <h2 className="text-2xl font-semibold text-blue-900 mb-4">Ready to Get Started?</h2>
               <p className="text-blue-800 mb-6">
                 Join the growing number of agencies using OpenComments to engage their communities 
                 more effectively and transparently.
               </p>
+              <div className="space-y-4">
+                <a 
+                  href="/contact" 
+                  className="inline-flex items-center px-8 py-3 text-lg font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"
+                >
+                  <Mail className="w-5 h-5 mr-2" />
+                  Request Agency Access
+                </a>
+                <div>
+                  <p className="text-sm text-blue-700">
+                    Have questions? Check our{' '}
+                    <a href="/faqs" className="underline hover:text-blue-800">
+                      Frequently Asked Questions
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default Onboarding;
               <a 
                 href="/contact" 
                 className="inline-flex items-center px-8 py-3 text-lg font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"

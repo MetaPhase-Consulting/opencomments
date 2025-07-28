@@ -390,12 +390,12 @@ const Contact = () => {
                 <Mail className="w-5 h-5 text-blue-600 mt-1 mr-3" />
                 <div>
                   <h3 className="text-sm font-medium text-gray-900">Email Support</h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-base text-gray-600">
                     <a href="mailto:support@opencomments.us" className="text-blue-700 hover:text-blue-800 underline">
                       support@opencomments.us
                     </a>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">Response within 1-2 business days</p>
+                  <p className="text-sm text-gray-500 mt-1">Response within 1-2 business days</p>
                 </div>
               </div>
             </div>
