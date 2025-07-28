@@ -23,6 +23,17 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      // Basic security rules
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      'no-script-url': 'error',
+      // Code quality
+      'no-console': 'warn',
+      'no-debugger': 'error',
+      'no-alert': 'warn',
+      'no-var': 'error',
+      'prefer-const': 'error',
     },
   }
 );

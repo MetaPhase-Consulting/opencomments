@@ -254,139 +254,125 @@ const CommentSearch = () => {
                 Advanced Search
                 <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </button>
-
+              
               <button
                 type="submit"
                 className="inline-flex items-center px-6 py-2 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                Search
+                Search Comments
               </button>
             </div>
+            {/* end of filter toggle */}
 
             {/* Advanced Filters */}
             {showFilters && (
               <div className="pt-4 border-t border-gray-200">
-                <div className="space-y-4">
-                  {/* Agency and State */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="agency_name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Agency
-                      </label>
-                      <input
-                        type="text"
-                        id="agency_name"
-                        value={filters.agency_name || ''}
-                        onChange={(e) => handleFilterChange('agency_name', e.target.value || undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Department of Transportation"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-                        State
-                      </label>
-                      <select
-                        id="state"
-                        value={filters.state || ''}
-                        onChange={(e) => handleFilterChange('state', e.target.value || undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">All States</option>
-                        {stateOptions.map(state => (
-                          <option key={state} value={state}>
-                            {state}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  {/* Date Range */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="date_from" className="block text-sm font-medium text-gray-700 mb-1">
-                        From Date
-                      </label>
-                      <input
-                        type="date"
-                        id="date_from"
-                        value={filters.date_from || ''}
-                        onChange={(e) => handleFilterChange('date_from', e.target.value || undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="date_to" className="block text-sm font-medium text-gray-700 mb-1">
-                        To Date
-                      </label>
-                      <input
-                        type="date"
-                        id="date_to"
-                        value={filters.date_to || ''}
-                        onChange={(e) => handleFilterChange('date_to', e.target.value || undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Agency and State - Row 1 */}
+                  <div>
+                    <label htmlFor="agency_name" className="block text-xs font-medium text-gray-700 mb-1">
+                      Agency
+                    </label>
+                    <input
+                      type="text"
+                      id="agency_name"
+                      value={filters.agency_name || ''}
+                      onChange={(e) => handleFilterChange('agency_name', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., Dept of Transportation"
+                    />
                   </div>
 
-                  {/* Commenter Type and Position */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="commenter_type" className="block text-sm font-medium text-gray-700 mb-1">
-                        Commenter Type
-                      </label>
-                      <select
-                        id="commenter_type"
-                        value={filters.commenter_type || ''}
-                        onChange={(e) => handleFilterChange('commenter_type', e.target.value || undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">All Types</option>
-                        {commenterTypeOptions.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
-                        Position
-                      </label>
-                      <select
-                        id="position"
-                        value={filters.position || ''}
-                        onChange={(e) => handleFilterChange('position', e.target.value || undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">All Positions</option>
-                        {positionOptions.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <label htmlFor="state" className="block text-xs font-medium text-gray-700 mb-1">
+                      State
+                    </label>
+                    <select
+                      id="state"
+                      value={filters.state || ''}
+                      onChange={(e) => handleFilterChange('state', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All States</option>
+                      {stateOptions.map(state => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date From and To - Row 2 */}
+                  <div>
+                    <label htmlFor="date_from" className="block text-xs font-medium text-gray-700 mb-1">
+                      From Date
+                    </label>
+                    <input
+                      type="date"
+                      id="date_from"
+                      value={filters.date_from || ''}
+                      onChange={(e) => handleFilterChange('date_from', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="date_to" className="block text-xs font-medium text-gray-700 mb-1">
+                      To Date
+                    </label>
+                    <input
+                      type="date"
+                      id="date_to"
+                      value={filters.date_to || ''}
+                      onChange={(e) => handleFilterChange('date_to', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Commenter Type and Position - Row 3 */}
+                  <div>
+                    <label htmlFor="commenter_type" className="block text-xs font-medium text-gray-700 mb-1">
+                      Commenter Type
+                    </label>
+                    <select
+                      id="commenter_type"
+                      value={filters.commenter_type || ''}
+                      onChange={(e) => handleFilterChange('commenter_type', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Types</option>
+                      {commenterTypeOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="position" className="block text-xs font-medium text-gray-700 mb-1">
+                      Position
+                    </label>
+                    <select
+                      id="position"
+                      value={filters.position || ''}
+                      onChange={(e) => handleFilterChange('position', e.target.value || undefined)}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Positions</option>
+                      {positionOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-
-                {/* Clear Filters */}
-                {hasActiveFilters() && (
-                  <div className="pt-4 border-t border-gray-200">
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="text-sm text-gray-600 hover:text-gray-800 underline"
-                    >
-                      Clear all filters
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </form>
         </div>
-
+        
         {/* Active Filter Chips */}
         {hasActiveFilters() && (
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -564,7 +550,7 @@ const CommentSearch = () => {
 
                   {/* Comment Snippet */}
                   <div className="text-gray-700">
-                    <div dangerouslySetInnerHTML={{ __html: result.snippet }} />
+                    {result.snippet}
                   </div>
 
                   {/* Commenter Info */}

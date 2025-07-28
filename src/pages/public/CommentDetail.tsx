@@ -146,7 +146,7 @@ const CommentDetail = () => {
                 <Calendar className="w-4 h-4 mr-1" />
                 {formatDate(comment.created_at)}
               </div>
-              {comment.attachments.length > 0 && (
+              {comment.attachments && comment.attachments.length > 0 && (
                 <div className="flex items-center">
                   <Paperclip className="w-4 h-4 mr-1" />
                   {comment.attachments.length} attachment{comment.attachments.length !== 1 ? 's' : ''}
@@ -232,7 +232,7 @@ const CommentDetail = () => {
         </div>
 
         {/* Attachments */}
-        {comment.attachments.length > 0 && (
+        {comment.attachments && comment.attachments.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               Attachments ({comment.attachments.length})

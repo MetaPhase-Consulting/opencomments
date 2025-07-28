@@ -284,9 +284,13 @@ const DocketDetail = () => {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
                   <div className="prose max-w-none text-gray-700">
-                    {(docket.summary || docket.description).split('\n').map((paragraph, index) => (
-                      <p key={index} className="mb-4">{paragraph}</p>
-                    ))}
+                    {docket.description ? (
+                      docket.description.split('\n').map((paragraph, index) => (
+                        <p key={index} className="mb-4">{paragraph}</p>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No description provided.</p>
+                    )}
                   </div>
                 </div>
 

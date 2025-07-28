@@ -33,14 +33,26 @@ const AgencyLogin = () => {
     setError('')
 
     try {
+      const sanitizedEmail = email.trim()
+      
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: sanitizedEmail,
         password,
       })
 
       if (error) {
-        // Generic error message to avoid user enumeration
-        setError('Invalid email or password.')
+        // Provide specific error messages while avoiding user enumeration
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password.')
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Please check your email and confirm your account.')
+        } else if (error.message.includes('Too many requests')) {
+          setError('Too many login attempts. Please try again later.')
+        } else if (error.message.includes('User not found')) {
+          setError('Invalid email or password.')
+        } else {
+          setError('An error occurred. Please try again.')
+        }
       } else {
         // Navigation will be handled by the auth state change
         // and AgencyProtectedRoute logic

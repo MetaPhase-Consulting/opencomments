@@ -2,10 +2,12 @@ import React, { useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { validatePassword, sanitizeInput, validateEmail } from '../lib/validation'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import SecurityBanner from '../components/SecurityBanner'
 import { Eye, EyeOff, AlertCircle, Github } from 'lucide-react'
+import { PasswordValidationResult } from '../lib/validation'
 
 const PublicLogin = () => {
   const { user, profile } = useAuth()
@@ -18,6 +20,7 @@ const PublicLogin = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult | null>(null)
 
   // Redirect if already logged in
   if (user && profile) {
@@ -34,13 +37,28 @@ const PublicLogin = () => {
     setError('')
 
     try {
+      const sanitizedEmail = sanitizeInput(email)
+      if (!validateEmail(sanitizedEmail)) {
+        setError('Please enter a valid email address')
+        return
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: sanitizedEmail,
         password,
       })
 
       if (error) {
-        setError(error.message)
+        // Provide more specific error messages while avoiding user enumeration
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password')
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Please check your email and confirm your account')
+        } else if (error.message.includes('Too many requests')) {
+          setError('Too many login attempts. Please try again later')
+        } else {
+          setError('An error occurred. Please try again')
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -55,38 +73,69 @@ const PublicLogin = () => {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+      const sanitizedEmail = sanitizeInput(email)
+      const sanitizedFullName = sanitizeInput(fullName)
+
+      if (!validateEmail(sanitizedEmail)) {
+        setError('Please enter a valid email address')
+        return
+      }
+
+      if (view === 'sign_up') {
+        const passwordCheck = validatePassword(password)
+        if (!passwordCheck.isValid) {
+          setError(passwordCheck.errors.join(', '))
+          return
+        }
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email: sanitizedEmail,
         password,
         options: {
           data: {
-            full_name: fullName.trim(),
-            role: 'public',
-          },
-        },
+            full_name: sanitizedFullName,
+            role: 'public'
+          }
+        }
       })
 
       if (error) {
-        setError(error.message)
-      } else if (data.user) {
-        // Create profile record
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            full_name: fullName.trim(),
-            role: 'public',
-          })
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError)
+        if (error.message.includes('User already registered')) {
+          setError('An account with this email already exists')
+        } else if (error.message.includes('Password should be at least')) {
+          setError('Password does not meet security requirements')
+        } else {
+          setError('Failed to create account. Please try again')
         }
+      } else {
+        setError('')
+        // Show success message or redirect
       }
     } catch (err) {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value
+    setPassword(newPassword)
+    
+    if (view === 'sign_up' && newPassword.length > 0) {
+      setPasswordValidation(validatePassword(newPassword))
+    } else {
+      setPasswordValidation(null)
+    }
+  }
+
+  const getPasswordStrengthColor = (strength: string) => {
+    switch (strength) {
+      case 'weak': return 'text-red-600'
+      case 'medium': return 'text-yellow-600'
+      case 'strong': return 'text-green-600'
+      default: return 'text-gray-600'
     }
   }
 
@@ -257,7 +306,7 @@ const PublicLogin = () => {
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
@@ -273,6 +322,11 @@ const PublicLogin = () => {
                   )}
                 </button>
               </div>
+              {view === 'sign_up' && passwordValidation && (
+                <p className={`mt-2 text-sm ${getPasswordStrengthColor(passwordValidation.strength)}`}>
+                  Password strength: {passwordValidation.strength}
+                </p>
+              )}
             </div>
 
             <button

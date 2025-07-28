@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { sanitizeInput, validateEmail } from '../lib/validation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SecurityBanner from '../components/SecurityBanner';
@@ -25,40 +26,23 @@ interface ContactForm {
 }
 
 const Contact = () => {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [formData, setFormData] = useState<ContactForm>({
-    userType: '',
-    name: profile?.full_name || '',
-    email: user?.email || '',
-    organization: profile?.agency_name || '',
+    userType: 'citizen',
+    name: '',
+    email: '',
+    organization: '',
     subject: '',
     category: 'general_inquiry',
     message: '',
     captchaToken: ''
   })
   const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
-  const userTypeOptions = [
-    { value: '', label: 'Select user type...' },
-    { value: 'citizen', label: 'Citizen/Public User' },
-    { value: 'government', label: 'Government/Agency User' }
-  ];
-
-  const categories = [
-    { value: 'technical_support', label: 'Technical Support', icon: HelpCircle },
-    { value: 'account_access', label: 'Login Issues', icon: HelpCircle },
-    { value: 'agency_onboarding', label: 'Agency Onboarding', icon: HelpCircle },
-    { value: 'feature_request', label: 'Feature Request', icon: HelpCircle },
-    { value: 'bug_report', label: 'Bug Report', icon: AlertCircle },
-    { value: 'training_request', label: 'Training Request', icon: HelpCircle },
-    { value: 'general_inquiry', label: 'General Inquiry', icon: Mail }
-  ];
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+  const updateFormData = (field: keyof ContactForm, value: string) => {
+    setFormData((prev: ContactForm) => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,25 +56,32 @@ const Contact = () => {
         throw new Error('Please fill in all required fields')
       }
 
+      if (!validateEmail(formData.email)) {
+        throw new Error('Please enter a valid email address')
+      }
+
       if (!formData.captchaToken) {
         throw new Error('Please complete the CAPTCHA verification')
+      }
+
+      // Sanitize inputs
+      const sanitizedData = {
+        user_id: user?.id || null,
+        user_type: sanitizeInput(formData.userType),
+        name: sanitizeInput(formData.name.trim()),
+        email: sanitizeInput(formData.email.trim()),
+        organization: sanitizeInput(formData.organization.trim()) || null,
+        subject: sanitizeInput(formData.subject.trim()),
+        category: sanitizeInput(formData.category),
+        message: sanitizeInput(formData.message.trim()),
+        user_agent: navigator.userAgent,
+        ip_address: null // Will be set by server if needed
       }
 
       // Submit to database
       const { error: dbError } = await supabase
         .from('contact_submissions')
-        .insert({
-          user_id: user?.id || null,
-          user_type: formData.userType,
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          organization: formData.organization.trim() || null,
-          subject: formData.subject.trim(),
-          category: formData.category,
-          message: formData.message.trim(),
-          user_agent: navigator.userAgent,
-          ip_address: null // Will be set by server if needed
-        })
+        .insert(sanitizedData)
 
       if (dbError) {
         console.error('Database error:', dbError)
@@ -100,15 +91,7 @@ const Contact = () => {
       // Send email via edge function (placeholder for now)
       try {
         const { error: emailError } = await supabase.functions.invoke('send-contact-email', {
-          body: {
-            name: formData.name,
-            email: formData.email,
-            userType: formData.userType,
-            organization: formData.organization,
-            subject: formData.subject,
-            category: formData.category,
-            message: formData.message
-          }
+          body: sanitizedData
         })
 
         if (emailError) {
@@ -120,15 +103,25 @@ const Contact = () => {
         // Continue with successful submission
       }
 
-      setSubmitted(true)
+      setSuccess(true)
+      setFormData({
+        userType: 'citizen',
+        name: '',
+        email: '',
+        organization: '',
+        subject: '',
+        category: 'general_inquiry',
+        message: '',
+        captchaToken: ''
+      })
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred')
+      setError(err.message || 'Failed to submit your message. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  if (submitted) {
+  if (success) {
     return (
       <div className="min-h-screen bg-white font-sans">
         <SecurityBanner />
@@ -147,12 +140,12 @@ const Contact = () => {
             <div className="space-y-4">
               <button
                 onClick={() => {
-                  setSubmitted(false);
+                  setSuccess(false);
                   setFormData({
-                    userType: '',
-                    name: profile?.full_name || '',
-                    email: user?.email || '',
-                    organization: profile?.agency_name || '',
+                    userType: 'citizen',
+                    name: '',
+                    email: '',
+                    organization: '',
                     subject: '',
                     category: 'general_inquiry',
                     message: '',
@@ -214,15 +207,13 @@ const Contact = () => {
                   id="userType"
                   name="userType"
                   value={formData.userType}
-                  onChange={handleInputChange}
+                  onChange={(e) => updateFormData('userType', e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {userTypeOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="">Select user type...</option>
+                  <option value="citizen">Citizen/Public User</option>
+                  <option value="government">Government/Agency User</option>
                 </select>
               </div>
 
@@ -236,7 +227,7 @@ const Contact = () => {
                     id="name"
                     name="name"
                     value={formData.name}
-                    onChange={handleInputChange}
+                    onChange={(e) => updateFormData('name', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Your full name"
@@ -252,7 +243,7 @@ const Contact = () => {
                     id="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleInputChange}
+                    onChange={(e) => updateFormData('email', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="your.email@example.com"
@@ -269,7 +260,7 @@ const Contact = () => {
                   id="organization"
                   name="organization"
                   value={formData.organization}
-                  onChange={handleInputChange}
+                  onChange={(e) => updateFormData('organization', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Your organization or agency"
                 />
@@ -283,15 +274,18 @@ const Contact = () => {
                   id="category"
                   name="category"
                   value={formData.category}
-                  onChange={handleInputChange}
+                  onChange={(e) => updateFormData('category', e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {categories.map(cat => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
+                  <option value="">Select category...</option>
+                  <option value="technical_support">Technical Support</option>
+                  <option value="account_access">Login Issues</option>
+                  <option value="agency_onboarding">Agency Onboarding</option>
+                  <option value="feature_request">Feature Request</option>
+                  <option value="bug_report">Bug Report</option>
+                  <option value="training_request">Training Request</option>
+                  <option value="general_inquiry">General Inquiry</option>
                 </select>
               </div>
 
@@ -304,7 +298,7 @@ const Contact = () => {
                   id="subject"
                   name="subject"
                   value={formData.subject}
-                  onChange={handleInputChange}
+                  onChange={(e) => updateFormData('subject', e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Brief description of your inquiry"
@@ -319,7 +313,7 @@ const Contact = () => {
                   id="message"
                   name="message"
                   value={formData.message}
-                  onChange={handleInputChange}
+                  onChange={(e) => updateFormData('message', e.target.value)}
                   required
                   rows={6}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

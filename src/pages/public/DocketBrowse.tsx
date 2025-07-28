@@ -15,11 +15,10 @@ import {
 } from 'lucide-react'
 
 const DocketBrowse = () => {
-  const { dockets, loading, error, hasMore, total, browseDockets, loadMore, reset } = usePublicBrowse()
+  const { dockets, loading, error, hasMore, browseDockets, loadMore, reset } = usePublicBrowse()
   const [filters, setFilters] = useState<DocketSearchFilters>({
     query: '',
     status: 'all',
-    tags: [],
     sort_by: 'newest',
     limit: 20,
     offset: 0
@@ -27,11 +26,6 @@ const DocketBrowse = () => {
   const [showFilters, setShowFilters] = useState(false)
 
   // Available options
-  const availableTags = [
-    'Budget', 'Transportation', 'Housing', 'Environment', 'Public Safety',
-    'Parks & Recreation', 'Zoning', 'Economic Development', 'Health', 'Education'
-  ]
-
   const stateOptions = [
     'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 
     'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 
@@ -44,15 +38,13 @@ const DocketBrowse = () => {
   ]
 
   const sortOptions = [
-    { value: 'newest', label: 'Newest Opened' },
-    { value: 'closing', label: 'Closest Closing' },
-    { value: 'title', label: 'Title A-Z' },
-    { value: 'agency', label: 'Agency A-Z' }
+    { value: 'newest', label: 'Newest First' },
+    { value: 'oldest', label: 'Oldest First' },
   ]
 
   useEffect(() => {
     browseDockets(filters)
-  }, [])
+  }, [browseDockets])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,19 +61,10 @@ const DocketBrowse = () => {
     browseDockets(newFilters)
   }
 
-  const toggleTag = (tag: string) => {
-    const currentTags = filters.tags || []
-    const newTags = currentTags.includes(tag)
-      ? currentTags.filter(t => t !== tag)
-      : [...currentTags, tag]
-    handleFilterChange('tags', newTags)
-  }
-
   const clearFilters = () => {
     const newFilters = { 
       query: '', 
       status: 'all' as const, 
-      tags: [], 
       sort_by: 'newest' as const,
       limit: 20, 
       offset: 0 
@@ -150,7 +133,6 @@ const DocketBrowse = () => {
 
   const hasActiveFilters = () => {
     return !!(filters.query || filters.agency_name || filters.state || 
-              (filters.tags && filters.tags.length > 0) || 
               filters.date_from || filters.date_to || 
               (filters.status && filters.status !== 'all'))
   }
@@ -194,17 +176,6 @@ const DocketBrowse = () => {
       })
     }
 
-    if (filters.tags && filters.tags.length > 0) {
-      filters.tags.forEach(tag => {
-        chips.push({
-          key: `tag_${tag}`,
-          label: 'Topic',
-          value: tag,
-          onRemove: () => toggleTag(tag)
-        })
-      })
-    }
-
     if (filters.date_from || filters.date_to) {
       const dateRange = [filters.date_from, filters.date_to].filter(Boolean).join(' to ')
       chips.push({
@@ -223,14 +194,14 @@ const DocketBrowse = () => {
 
   return (
     <PublicLayout 
-      title="Browse Comment Opportunities - OpenComments"
-      description="Find open public comment periods on government proposals and policy changes"
+      title="Browse Dockets - OpenComments"
+      description="Find public comment opportunities on government proposals and policy changes."
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Public Comment Opportunities
+            Browse Public Dockets
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Find and participate in open comment periods on government proposals, 
@@ -256,7 +227,6 @@ const DocketBrowse = () => {
               />
             </div>
 
-            {/* Filter Toggle and Controls */}
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -264,52 +234,25 @@ const DocketBrowse = () => {
                 className="inline-flex items-center text-sm text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
               >
                 <Filter className="w-4 h-4 mr-1" />
-                Advanced Filters
+                Advanced Search
                 <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </button>
-
-              <div className="flex items-center space-x-4">
-                <select
-                  value={filters.status}
-                  onChange={(e) => handleFilterChange('status', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Filter by status"
-                >
-                  <option value="all">All Dockets</option>
-                  <option value="open">Open for Comments</option>
-                  <option value="closed">Recently Closed</option>
-                  <option value="archived">Archived</option>
-                </select>
-
-                <select
-                  value={filters.sort_by}
-                  onChange={(e) => handleFilterChange('sort_by', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Sort by"
-                >
-                  {sortOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="submit"
-                  className="inline-flex items-center px-6 py-2 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Search
-                </button>
-              </div>
+              
+              <button
+                type="submit"
+                className="inline-flex items-center px-6 py-2 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Search Dockets
+              </button>
             </div>
 
             {/* Advanced Filters */}
             {showFilters && (
               <div className="pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Agency */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Agency and State - Row 1 */}
                   <div>
-                    <label htmlFor="agency_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="agency_name" className="block text-xs font-medium text-gray-700 mb-1">
                       Agency
                     </label>
                     <input
@@ -317,21 +260,20 @@ const DocketBrowse = () => {
                       id="agency_name"
                       value={filters.agency_name || ''}
                       onChange={(e) => handleFilterChange('agency_name', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Department of Transportation"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., Dept of Transportation"
                     />
                   </div>
 
-                  {/* State */}
                   <div>
-                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="state" className="block text-xs font-medium text-gray-700 mb-1">
                       State
                     </label>
                     <select
                       id="state"
                       value={filters.state || ''}
                       onChange={(e) => handleFilterChange('state', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">All States</option>
                       {stateOptions.map(state => (
@@ -342,75 +284,38 @@ const DocketBrowse = () => {
                     </select>
                   </div>
 
-                  {/* Date From */}
+                  {/* Date From and To - Row 2 */}
                   <div>
-                    <label htmlFor="date_from" className="block text-sm font-medium text-gray-700 mb-1">
-                      Open Date From
+                    <label htmlFor="date_from" className="block text-xs font-medium text-gray-700 mb-1">
+                      From Date
                     </label>
                     <input
                       type="date"
                       id="date_from"
                       value={filters.date_from || ''}
                       onChange={(e) => handleFilterChange('date_from', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
-                  {/* Date To */}
                   <div>
-                    <label htmlFor="date_to" className="block text-sm font-medium text-gray-700 mb-1">
-                      Close Date To
+                    <label htmlFor="date_to" className="block text-xs font-medium text-gray-700 mb-1">
+                      To Date
                     </label>
                     <input
                       type="date"
                       id="date_to"
                       value={filters.date_to || ''}
                       onChange={(e) => handleFilterChange('date_to', e.target.value || undefined)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
-
-                {/* Topic Tags */}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Topic Tags
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags.map(tag => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleTag(tag)}
-                        className={`px-3 py-1 text-sm rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          (filters.tags || []).includes(tag)
-                            ? 'bg-blue-100 border-blue-300 text-blue-800'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Clear Filters */}
-                {hasActiveFilters() && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="text-sm text-gray-600 hover:text-gray-800 underline"
-                    >
-                      Clear all filters
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </form>
         </div>
-
+        
         {/* Active Filter Chips */}
         {hasActiveFilters() && (
           <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -438,6 +343,30 @@ const DocketBrowse = () => {
             </div>
           </div>
         )}
+
+        {/* Results Count & Sort */}
+        <div className="flex items-center justify-between mb-6">
+          {!loading && dockets.length > 0 ? (
+            <p className="text-gray-600">
+              Showing {dockets.length} {dockets.length === 1 ? 'docket' : 'dockets'}
+            </p>
+          ) : (
+            <div></div> // Placeholder for alignment
+          )}
+
+          <select
+            value={filters.sort_by}
+            onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Sort by"
+          >
+            {sortOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Results */}
         {error && (

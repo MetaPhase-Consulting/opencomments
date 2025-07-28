@@ -173,22 +173,69 @@ export const useAgencyProfile = () => {
     setError(null)
 
     try {
-      const { data, error: fetchError } = await supabase.rpc('get_agency_public_profile', {
-        p_agency_slug: agencySlug
-      })
+      // Fetch agency data directly
+      const { data: agencyData, error: agencyError } = await supabase
+        .from('agencies')
+        .select('*')
+        .eq('slug', agencySlug)
+        .single()
 
-      if (fetchError) {
-        console.error('Agency fetch error:', fetchError)
-        setError('Failed to load agency')
-        return
-      }
-
-      if (!data || data.length === 0) {
+      if (agencyError || !agencyData) {
+        console.error('Agency fetch error:', agencyError)
         setError('Agency not found')
         return
       }
 
-      setAgency(data[0])
+      // Fetch dockets for this agency
+      const { data: docketsData, error: docketsError } = await supabase
+        .from('dockets')
+        .select(`
+          id,
+          title,
+          slug,
+          status,
+          open_at,
+          close_at,
+          tags,
+          created_at,
+          comments!inner(id)
+        `)
+        .eq('agency_id', agencyData.id)
+        .in('status', ['open', 'closed'])
+        .order('created_at', { ascending: false })
+
+      if (docketsError) {
+        console.error('Dockets fetch error:', docketsError)
+        setError('Failed to load agency dockets')
+        return
+      }
+
+      // Transform the data to match the expected format
+      const transformedDockets = docketsData?.map(docket => ({
+        id: docket.id,
+        title: docket.title,
+        slug: docket.slug,
+        status: docket.status,
+        open_at: docket.open_at,
+        close_at: docket.close_at,
+        tags: docket.tags || [],
+        comment_count: docket.comments?.length || 0,
+        created_at: docket.created_at
+      })) || []
+
+      // Create the agency profile object
+      const agencyProfile: AgencyProfile = {
+        id: agencyData.id,
+        name: agencyData.name,
+        jurisdiction: agencyData.jurisdiction,
+        description: agencyData.description,
+        logo_url: agencyData.logo_url,
+        contact_email: agencyData.contact_email,
+        created_at: agencyData.created_at,
+        dockets: transformedDockets
+      }
+
+      setAgency(agencyProfile)
     } catch (err) {
       console.error('Agency fetch error:', err)
       setError('An unexpected error occurred')
