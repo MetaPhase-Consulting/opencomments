@@ -11,7 +11,7 @@ const About = () => {
       <Header />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="prose prose-lg max-w-none">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">About Platform</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">About the Platform</h1>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
             <p className="text-sm text-gray-600 mb-0">
