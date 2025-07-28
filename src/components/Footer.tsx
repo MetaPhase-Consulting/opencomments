@@ -114,6 +114,22 @@ const Footer = () => {
               <ul className="space-y-3">
                 <li>
                   <a
+                    href="/onboarding"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    Join & Onboard
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/agency/login"
+                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
+                  >
+                    Agency Portal
+                  </a>
+                </li>
+                <li>
+                  <a
                     href="/about"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
@@ -122,23 +138,7 @@ const Footer = () => {
                 </li>
                 <li>
                   <a
-                    href="/agency"
-                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
-                  >
-                    Agency Portal
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/join-onboard"
-                    className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
-                  >
-                    Join & Onboard
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/user-admin-guide"
+                    href="/user-guide"
                     className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded underline"
                   >
                     User/Admin Guide

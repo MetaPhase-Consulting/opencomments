@@ -98,11 +98,11 @@ const Hero = () => {
         {/* Call to Action Buttons */}
         <div className="flex justify-center">
           <a
-            href="/comments"
+            href="/dockets"
             className="inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-blue-800"
             style={{ backgroundColor: '#0050D8' }}
           >
-            Search Comments
+            Browse Comment Opportunities
           </a>
         </div>
         

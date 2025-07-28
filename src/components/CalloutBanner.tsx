@@ -8,7 +8,7 @@ const CalloutBanner = () => {
           Open source and free for governments. Get started today.
         </h2>
         <a
-          href="/signup"
+          href="/onboarding"
           className="inline-flex items-center justify-center px-8 py-3 text-base font-medium bg-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white hover:bg-gray-100"
           style={{ color: '#0050D8' }}
         >

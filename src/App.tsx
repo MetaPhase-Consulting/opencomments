@@ -75,6 +75,7 @@ function App() {
             <Route path="/new-onboarding" element={<Onboarding />} />
             <Route path="/faqs" element={<FAQs />} />
             <Route path="/user-admin-guide" element={<UserGuide />} />
+            <Route path="/user-guide" element={<UserGuide />} />
             <Route path="/government-user-guide" element={<UserGuide />} />
             <Route path="/data-access" element={<DataAccess />} />
             <Route path="/status" element={<Status />} />
