@@ -74,7 +74,7 @@ const Header = () => {
   const handleStateSelect = (stateCode: string) => {
     setSelectedState(stateCode);
     setShowStateDropdown(false);
-    window.location.href = `https://${stateCode.toLowerCase()}.opencomments.us`;
+    window.location.href = `/state/${stateCode.toLowerCase()}`;
   };
 
   return (
