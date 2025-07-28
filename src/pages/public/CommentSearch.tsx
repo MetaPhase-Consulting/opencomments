@@ -564,7 +564,7 @@ const CommentSearch = () => {
 
                   {/* Comment Snippet */}
                   <div className="text-gray-700">
-                    <div dangerouslySetInnerHTML={{ __html: result.snippet }} />
+                    {result.snippet}
                   </div>
 
                   {/* Commenter Info */}

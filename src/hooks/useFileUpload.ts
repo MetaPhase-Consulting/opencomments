@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { validateFileType, validateFileSize, validateMimeType, generateSecureFilename } from '../lib/validation'
 
-interface UploadedFile {
+export interface UploadedFile {
   id: string
   filename: string
   file_url: string
@@ -10,10 +11,11 @@ interface UploadedFile {
   file_size: number
 }
 
-interface UseFileUploadOptions {
-  maxFileSize?: number // in MB
+export interface UseFileUploadOptions {
+  maxFileSize?: number
   maxFiles?: number
   allowedTypes?: string[]
+  allowedMimeTypes?: string[]
   onProgress?: (progress: number) => void
   onError?: (error: string) => void
 }
@@ -27,21 +29,45 @@ export const useFileUpload = (options: UseFileUploadOptions = {}) => {
     maxFileSize = 10, // 10MB default
     maxFiles = 3,
     allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif'],
+    allowedMimeTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'text/plain'
+    ],
     onProgress,
     onError
   } = options
 
   const validateFile = (file: File): string | null => {
     // Check file size
-    const fileSizeMB = file.size / (1024 * 1024)
-    if (fileSizeMB > maxFileSize) {
+    if (!validateFileSize(file, maxFileSize)) {
       return `File size must be less than ${maxFileSize}MB`
     }
 
-    // Check file type
-    const extension = file.name.split('.').pop()?.toLowerCase()
-    if (!extension || !allowedTypes.includes(extension)) {
+    // Check file type by extension
+    if (!validateFileType(file, allowedTypes)) {
       return `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`
+    }
+
+    // Check MIME type
+    if (!validateMimeType(file, allowedMimeTypes)) {
+      return `File type not allowed. Please upload a valid document or image.`
+    }
+
+    // Additional security checks
+    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+      return 'Invalid filename'
+    }
+
+    // Check for potentially dangerous file types
+    const dangerousExtensions = ['exe', 'bat', 'cmd', 'com', 'pif', 'scr', 'vbs', 'js', 'jar', 'msi']
+    const extension = file.name.split('.').pop()?.toLowerCase()
+    if (extension && dangerousExtensions.includes(extension)) {
+      return 'This file type is not allowed for security reasons'
     }
 
     return null
@@ -80,11 +106,9 @@ export const useFileUpload = (options: UseFileUploadOptions = {}) => {
           throw new Error(validationError)
         }
 
-        // Generate unique filename
-        const fileExtension = file.name.split('.').pop()
-        const uniqueId = crypto.randomUUID()
-        const filename = `${uniqueId}.${fileExtension}`
-        const filePath = `agency/${agencyId}/docket/${docketId}/${commentId}/${filename}`
+        // Generate secure filename
+        const secureFilename = generateSecureFilename(file.name)
+        const filePath = `agency/${agencyId}/docket/${docketId}/${commentId}/${secureFilename}`
 
         // Upload to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -107,47 +131,37 @@ export const useFileUpload = (options: UseFileUploadOptions = {}) => {
           .from('comment-attachments')
           .getPublicUrl(filePath)
 
-        // Save attachment record to database
-        const { data: attachmentData, error: dbError } = await supabase
-          .from('comment_attachments')
-          .insert({
-            comment_id: commentId,
-            filename: file.name,
-            file_url: urlData.publicUrl,
-            file_path: filePath,
-            mime_type: file.type,
-            file_size: file.size
-          })
-          .select()
-          .single()
-
-        if (dbError) {
-          console.error('Database error:', dbError)
-          // Clean up uploaded file
-          await supabase.storage
-            .from('comment-attachments')
-            .remove([filePath])
-          
-          const errorMsg = 'Failed to save attachment record'
+        if (!urlData?.publicUrl) {
+          const errorMsg = 'Failed to generate file URL'
           setError(errorMsg)
           onError?.(errorMsg)
           throw new Error(errorMsg)
         }
 
-        uploadedFiles.push(attachmentData)
+        uploadedFiles.push({
+          id: uploadData.path,
+          filename: file.name,
+          file_url: urlData.publicUrl,
+          file_path: filePath,
+          mime_type: file.type,
+          file_size: file.size
+        })
 
         // Update progress
-        const progressPercent = ((i + 1) / fileArray.length) * 100
-        setProgress(progressPercent)
-        onProgress?.(progressPercent)
+        const newProgress = ((i + 1) / fileArray.length) * 100
+        setProgress(newProgress)
+        onProgress?.(newProgress)
       }
 
       return uploadedFiles
     } catch (error) {
-      console.error('File upload error:', error)
+      const errorMsg = error instanceof Error ? error.message : 'Upload failed'
+      setError(errorMsg)
+      onError?.(errorMsg)
       throw error
     } finally {
       setUploading(false)
+      setProgress(0)
     }
   }
 

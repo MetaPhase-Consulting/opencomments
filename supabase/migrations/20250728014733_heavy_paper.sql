@@ -56,7 +56,6 @@ BEGIN
   SELECT 
     c.id,
     c.content,
-    -- Generate snippet with basic truncation (simplified for now)
     CASE 
       WHEN length(c.content) > 200 THEN 
         left(c.content, 200) || '...'
@@ -66,7 +65,7 @@ BEGIN
     c.commenter_name,
     c.commenter_organization,
     COALESCE(ci.representation, 'individual') as commenter_type,
-    COALESCE(ci.position, 'unclear') as position,
+    COALESCE(c.position, 'not_specified') as position,
     c.created_at,
     c.docket_id,
     d.title as docket_title,
@@ -75,7 +74,6 @@ BEGIN
     a.jurisdiction as agency_jurisdiction,
     d.tags,
     COALESCE(att_count.count, 0) as attachment_count,
-    -- Simple ranking based on text search relevance
     CASE 
       WHEN p_query IS NOT NULL THEN
         ts_rank(c.search_vector, plainto_tsquery('english', p_query))
@@ -94,28 +92,17 @@ BEGIN
     GROUP BY comment_id
   ) att_count ON att_count.comment_id = c.id
   WHERE 
-    -- Only show approved/published comments
     c.status = 'published'
-    -- Text search filter
     AND (
-      p_query IS NULL 
-      OR c.search_vector @@ plainto_tsquery('english', p_query)
-      OR d.title ILIKE '%' || p_query || '%'
-      OR a.name ILIKE '%' || p_query || '%'
+      p_query IS NULL OR c.search_vector @@ plainto_tsquery('english', p_query)
     )
-    -- Agency name filter
     AND (p_agency_name IS NULL OR a.name ILIKE '%' || p_agency_name || '%')
-    -- State filter
     AND (p_state IS NULL OR a.jurisdiction ILIKE '%' || p_state || '%')
-    -- Tags filter
     AND (p_tags IS NULL OR d.tags && p_tags)
-    -- Date range filters
     AND (p_date_from IS NULL OR c.created_at >= p_date_from)
     AND (p_date_to IS NULL OR c.created_at <= p_date_to)
-    -- Commenter type filter
     AND (p_commenter_type IS NULL OR COALESCE(ci.representation, 'individual') = p_commenter_type)
-    -- Position filter
-    AND (p_position IS NULL OR COALESCE(ci.position, 'unclear') = p_position)
+    AND (p_position IS NULL OR COALESCE(c.position, 'not_specified') = p_position)
   ORDER BY 
     CASE 
       WHEN p_sort_by = 'newest' THEN c.created_at
@@ -129,8 +116,9 @@ BEGIN
     CASE 
       WHEN p_sort_by = 'docket' THEN d.title
     END ASC,
-    -- Default fallback ordering
-    c.created_at DESC
+    CASE 
+      WHEN p_query IS NOT NULL THEN ts_rank(c.search_vector, plainto_tsquery('english', p_query))
+    END DESC
   LIMIT p_limit
   OFFSET p_offset;
 END;

@@ -28,7 +28,6 @@ CREATE OR REPLACE FUNCTION search_comments(
   p_date_from timestamptz DEFAULT NULL,
   p_date_to timestamptz DEFAULT NULL,
   p_commenter_type text DEFAULT NULL,
-  p_has_attachment boolean DEFAULT NULL,
   p_position text DEFAULT NULL,
   p_sort_by text DEFAULT 'newest',
   p_limit integer DEFAULT 20,
@@ -116,9 +115,6 @@ BEGIN
          (p_commenter_type = 'organization' AND ci.representation = 'organization') OR
          (p_commenter_type = 'agent' AND ci.representation = 'behalf_of_another') OR
          (p_commenter_type = 'anonymous' AND c.commenter_name IS NULL))
-    AND (p_has_attachment IS NULL OR 
-         (p_has_attachment = true AND att_count.count > 0) OR
-         (p_has_attachment = false AND (att_count.count IS NULL OR att_count.count = 0)))
     AND (p_position IS NULL OR c.position = p_position)
   ORDER BY 
     CASE 

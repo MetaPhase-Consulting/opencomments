@@ -24,20 +24,14 @@ INSERT INTO agencies (
   id,
   name,
   jurisdiction,
-  jurisdiction_type,
-  description,
-  contact_email,
-  public_slug,
+  logo_url,
   created_at,
   updated_at
 ) VALUES (
   'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   'City of Springfield',
   'Springfield, IL',
-  'city',
-  'The City of Springfield is committed to transparent governance and meaningful public participation in local decision-making.',
-  'clerk@springfield.gov',
-  'springfield',
+  NULL,
   now() - interval '6 months',
   now() - interval '1 month'
 ) ON CONFLICT (id) DO NOTHING;
@@ -49,8 +43,6 @@ INSERT INTO agency_settings (
   allowed_mime_types,
   captcha_enabled,
   auto_publish,
-  accent_color,
-  footer_disclaimer,
   created_at,
   updated_at
 ) VALUES (
@@ -59,8 +51,6 @@ INSERT INTO agency_settings (
   ARRAY['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'],
   true,
   false,
-  '#0050D8',
-  'All comments become part of the public record and are subject to Illinois Freedom of Information Act.',
   now() - interval '6 months',
   now() - interval '1 month'
 ) ON CONFLICT (agency_id) DO NOTHING;
@@ -182,11 +172,11 @@ INSERT INTO comments (
   commenter_organization,
   created_at,
   updated_at
-) VALUES 
+) VALUES
 (
   'c1a2b3c4-e5f6-7890-abcd-ef1234567891',
   'd1a2b3c4-e5f6-7890-abcd-ef1234567891',
-  gen_random_uuid(),
+  NULL,
   'I strongly support the downtown bike lane expansion. As a daily cyclist commuting to work, I currently feel unsafe sharing the road with cars on Main Street. Protected bike lanes would make cycling a viable option for more residents and reduce traffic congestion. Please ensure the lanes are properly separated from vehicle traffic and include clear signage.',
   'published',
   'Sarah Johnson',
@@ -198,7 +188,7 @@ INSERT INTO comments (
 (
   'c2a2b3c4-e5f6-7890-abcd-ef1234567892',
   'd1a2b3c4-e5f6-7890-abcd-ef1234567891',
-  gen_random_uuid(),
+  NULL,
   'While I appreciate the environmental benefits of cycling, I am concerned about the loss of parking spaces on Main Street. Local businesses depend on street parking for customers. Has the city considered alternative routes that would not impact commercial parking? Perhaps Oak Avenue would be a better choice for the main bike corridor.',
   'published',
   'Michael Chen',
@@ -210,7 +200,7 @@ INSERT INTO comments (
 (
   'c3a2b3c4-e5f6-7890-abcd-ef1234567893',
   'd1a2b3c4-e5f6-7890-abcd-ef1234567891',
-  gen_random_uuid(),
+  NULL,
   'The bike lane proposal is excellent for promoting healthy transportation options. However, I urge the city to include better lighting along the proposed routes for evening safety. Also, please ensure the bike lanes connect properly to existing trails in Lincoln Park.',
   'published',
   'Dr. Lisa Rodriguez',
@@ -222,7 +212,7 @@ INSERT INTO comments (
 (
   'c4a2b3c4-e5f6-7890-abcd-ef1234567894',
   'd1a2b3c4-e5f6-7890-abcd-ef1234567891',
-  gen_random_uuid(),
+  NULL,
   'As a parent of two young children, I am thrilled about the bike lane expansion. It would allow our family to safely bike to school and downtown events. Please include family-friendly features like wider lanes to accommodate bike trailers and cargo bikes.',
   'published',
   'Jennifer Adams',
@@ -234,7 +224,7 @@ INSERT INTO comments (
 (
   'c5a2b3c4-e5f6-7890-abcd-ef1234567895',
   'd1a2b3c4-e5f6-7890-abcd-ef1234567891',
-  gen_random_uuid(),
+  NULL,
   'I oppose this project due to the negative impact on vehicle traffic flow. Main Street is already congested during rush hours, and removing a traffic lane will make the situation worse. The city should focus on improving public transit instead of catering to a small group of cyclists.',
   'published',
   'Robert Thompson',
@@ -246,7 +236,7 @@ INSERT INTO comments (
 (
   'c6a2b3c4-e5f6-7890-abcd-ef1234567896',
   'd1a2b3c4-e5f6-7890-abcd-ef1234567891',
-  gen_random_uuid(),
+  NULL,
   'The Springfield Cycling Club fully endorses this proposal. We have been advocating for safe cycling infrastructure for years. The protected bike lanes will encourage more people to choose cycling for transportation, reducing emissions and improving public health. We volunteer to help with community education about bike lane etiquette.',
   'published',
   'David Park',
@@ -270,9 +260,9 @@ INSERT INTO comments (
   updated_at
 ) VALUES 
 (
-  'c7a2b3c4-e5f6-7890-abcd-ef1234567897',
+  'c10a2b3c-4e5f-4b90-abcd-ef1234567890',
   'd2a2b3c4-e5f6-7890-abcd-ef1234567892',
-  gen_random_uuid(),
+  NULL,
   'I support the increased funding for public safety, but I am concerned about the proposed property tax increase. Many residents are already struggling with rising costs. Has the city explored other revenue sources, such as fees for new developments or grants for infrastructure projects?',
   'published',
   'Maria Gonzalez',
@@ -282,9 +272,9 @@ INSERT INTO comments (
   now() - interval '7 days'
 ),
 (
-  'c8a2b3c4-e5f6-7890-abcd-ef1234567898',
+  'c11a2b3c-4e5f-4b90-abcd-ef1234567891',
   'd2a2b3c4-e5f6-7890-abcd-ef1234567892',
-  gen_random_uuid(),
+  NULL,
   'The budget allocation for affordable housing is insufficient given the current housing crisis. The city should prioritize housing assistance and development incentives over other discretionary spending. I recommend increasing the housing budget by at least $2 million.',
   'published',
   'James Wilson',
@@ -294,9 +284,9 @@ INSERT INTO comments (
   now() - interval '6 days'
 ),
 (
-  'c9a2b3c4-e5f6-7890-abcd-ef1234567899',
+  'c12a2b3c-4e5f-4b90-abcd-ef1234567892',
   'd2a2b3c4-e5f6-7890-abcd-ef1234567892',
-  gen_random_uuid(),
+  NULL,
   'As a small business owner, I appreciate the city''s focus on economic development. However, the budget should include more support for local businesses, such as facade improvement grants and marketing assistance. These investments would generate tax revenue and create jobs.',
   'published',
   'Patricia Lee',
@@ -306,38 +296,38 @@ INSERT INTO comments (
   now() - interval '5 days'
 ),
 (
-  'c10a2b3c4-e5f6-7890-abcd-ef123456789a',
+  'c13a2b3c-4e5f-4b90-abcd-ef1234567893',
   'd2a2b3c4-e5f6-7890-abcd-ef1234567892',
-  gen_random_uuid(),
-  'The parks and recreation budget seems adequate, but I urge the city to prioritize accessibility improvements in all public facilities. Many of our parks and community centers are not fully accessible to residents with disabilities.',
+  NULL,
+  'The proposed budget strikes a good balance between essential services and new initiatives. I particularly support the increased funding for park maintenance and the new community center. These investments will improve quality of life for all residents.',
   'published',
-  'Thomas Anderson',
-  'tanderson@email.com',
+  'Thomas Brown',
+  'tbrown@email.com',
   null,
   now() - interval '5 days',
   now() - interval '4 days'
 ),
 (
-  'c11a2b3c4-e5f6-7890-abcd-ef123456789b',
+  'c14a2b3c-4e5f-4b90-abcd-ef1234567894',
   'd2a2b3c4-e5f6-7890-abcd-ef1234567892',
-  gen_random_uuid(),
-  'I strongly oppose any property tax increase. The city needs to find efficiencies in current operations before asking residents to pay more. Consider consolidating departments, reducing administrative overhead, and renegotiating vendor contracts.',
+  NULL,
+  'I am concerned about the lack of funding for senior services in this budget. The aging population in Springfield needs more support for transportation, meal programs, and home care assistance. Please consider reallocating some funds to address these critical needs.',
   'published',
-  'Nancy Brown',
-  'nbrown@email.com',
-  null,
+  'Helen Davis',
+  'hdavis@springfieldseniors.org',
+  'Springfield Senior Citizens Council',
   now() - interval '4 days',
   now() - interval '3 days'
 ),
 (
-  'c12a2b3c4-e5f6-7890-abcd-ef123456789c',
+  'c15a2b3c-4e5f-4b90-abcd-ef1234567895',
   'd2a2b3c4-e5f6-7890-abcd-ef1234567892',
-  gen_random_uuid(),
-  'The environmental sustainability initiatives in the budget are commendable. I particularly support the funding for solar panels on city buildings and the electric vehicle charging stations. These investments will save money long-term and demonstrate environmental leadership.',
+  NULL,
+  'The budget''s focus on infrastructure is commendable, but I worry about the long-term sustainability of the proposed tax increase. The city should develop a comprehensive plan for infrastructure funding that doesn''t rely solely on property taxes.',
   'published',
-  'Dr. Kevin Martinez',
-  'kmartinez@springfieldenviron.org',
-  'Springfield Environmental Coalition',
+  'Carlos Rodriguez',
+  'crodriguez@email.com',
+  null,
   now() - interval '3 days',
   now() - interval '2 days'
 );
@@ -356,9 +346,9 @@ INSERT INTO comments (
   updated_at
 ) VALUES 
 (
-  'c13a2b3c4-e5f6-7890-abcd-ef123456789d',
+  'c16a2b3c-4e5f-4b90-abcd-ef1234567896',
   'd3a2b3c4-e5f6-7890-abcd-ef1234567893',
-  gen_random_uuid(),
+  NULL,
   'The Riverside District zoning amendment is a positive step toward waterfront revitalization. However, the height restrictions should be more stringent to preserve river views for existing residents. I recommend limiting buildings to 4 stories maximum.',
   'published',
   'Elizabeth Taylor',
@@ -368,9 +358,9 @@ INSERT INTO comments (
   now() - interval '40 days'
 ),
 (
-  'c14a2b3c4-e5f6-7890-abcd-ef123456789e',
+  'c17a2b3c-4e5f-4b90-abcd-ef1234567897',
   'd3a2b3c4-e5f6-7890-abcd-ef1234567893',
-  gen_random_uuid(),
+  NULL,
   'This zoning change will bring much-needed economic development to the Riverside area. The mixed-use approach is smart and will create a vibrant community. Please ensure adequate parking is required for new developments to avoid spillover into residential neighborhoods.',
   'published',
   'Charles Davis',
@@ -380,9 +370,9 @@ INSERT INTO comments (
   now() - interval '35 days'
 ),
 (
-  'c15a2b3c4-e5f6-7890-abcd-ef123456789f',
+  'c18a2b3c-4e5f-4b90-abcd-ef1234567898',
   'd3a2b3c4-e5f6-7890-abcd-ef1234567893',
-  gen_random_uuid(),
+  NULL,
   'I am concerned about the environmental impact of increased development along the river. The amendment should include stronger protections for wetlands and wildlife habitats. Any new construction should be required to include green infrastructure for stormwater management.',
   'published',
   'Dr. Amanda Foster',

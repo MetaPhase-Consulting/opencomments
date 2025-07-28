@@ -18,6 +18,7 @@ import {
   FileText,
   Clock
 } from 'lucide-react';
+import { sanitizeInput, validateEmail } from '../../lib/validation';
 
 interface DocketInfo {
   id: string;
@@ -137,9 +138,9 @@ const CommentWizard = () => {
     }
   };
 
-  const updateFormData = (field: keyof CommentForm, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const updateFormData = (field: keyof CommentForm, value: string | boolean | File[]) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -153,7 +154,7 @@ const CommentWizard = () => {
     const validFiles: File[] = [];
     const errors: string[] = [];
 
-    files.forEach(file => {
+    files.forEach((file: File) => {
       // Check file size
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > (docket?.max_file_size_mb || 10)) {
@@ -199,7 +200,7 @@ const CommentWizard = () => {
     switch (step) {
       case 1:
         // Name and email are optional, but if provided should be valid
-        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        if (formData.email && !validateEmail(formData.email)) {
           setError('Please enter a valid email address');
           return false;
         }
@@ -276,10 +277,10 @@ const CommentWizard = () => {
         .insert({
           docket_id: docket.id,
           user_id: user.id,
-          content: formData.content.trim(),
-          commenter_name: formData.name.trim() || null,
-          commenter_email: formData.email.trim() || null,
-          commenter_organization: formData.organization.trim() || null,
+          content: sanitizeInput(formData.content.trim()),
+          commenter_name: sanitizeInput(formData.name.trim()) || null,
+          commenter_email: sanitizeInput(formData.email.trim()) || null,
+          commenter_organization: sanitizeInput(formData.organization.trim()) || null,
           status: docket.auto_publish ? 'published' : 'submitted'
         })
         .select()
@@ -489,7 +490,7 @@ const CommentWizard = () => {
                     type="text"
                     id="name"
                     value={formData.name}
-                    onChange={(e) => updateFormData('name', e.target.value)}
+                    onChange={(e) => updateFormData('name', sanitizeInput(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Your full name"
                   />
@@ -500,31 +501,28 @@ const CommentWizard = () => {
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
+                    Email Address (Optional)
                   </label>
                   <input
                     type="email"
                     id="email"
                     value={formData.email}
-                    onChange={(e) => updateFormData('email', e.target.value)}
+                    onChange={(e) => updateFormData('email', sanitizeInput(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="your.email@example.com"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Optional, for confirmation email only (not public)
-                  </p>
                 </div>
               </div>
 
               <div>
                 <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">
-                  Organization or Affiliation
+                  Organization (Optional)
                 </label>
                 <input
                   type="text"
                   id="organization"
                   value={formData.organization}
-                  onChange={(e) => updateFormData('organization', e.target.value)}
+                  onChange={(e) => updateFormData('organization', sanitizeInput(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Company, organization, or group you represent"
                 />
@@ -553,7 +551,7 @@ const CommentWizard = () => {
                 <textarea
                   id="content"
                   value={formData.content}
-                  onChange={(e) => updateFormData('content', e.target.value)}
+                  onChange={(e) => updateFormData('content', sanitizeInput(e.target.value))}
                   rows={12}
                   maxLength={docket?.max_comment_length || 4000}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -741,7 +739,7 @@ const CommentWizard = () => {
                     type="text"
                     id="organizationName"
                     value={formData.organizationName}
-                    onChange={(e) => updateFormData('organizationName', e.target.value)}
+                    onChange={(e) => updateFormData('organizationName', sanitizeInput(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Full legal name of organization or entity"
                     required
@@ -758,7 +756,7 @@ const CommentWizard = () => {
                   <textarea
                     id="authorizationStatement"
                     value={formData.authorizationStatement}
-                    onChange={(e) => updateFormData('authorizationStatement', e.target.value)}
+                    onChange={(e) => updateFormData('authorizationStatement', sanitizeInput(e.target.value))}
                     rows={3}
                     maxLength={1000}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

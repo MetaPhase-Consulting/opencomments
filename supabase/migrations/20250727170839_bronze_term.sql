@@ -110,10 +110,19 @@ BEGIN
     ALTER TABLE dockets ADD COLUMN created_by uuid REFERENCES auth.users(id);
   END IF;
   
-  -- Update status column to use enum if it's still text
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'dockets' AND column_name = 'status' AND data_type = 'text') THEN
-    ALTER TABLE dockets ALTER COLUMN status TYPE docket_status USING status::docket_status;
-  END IF;
+  -- Status enum conversion will be handled in later migration
+  -- IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'dockets' AND column_name = 'status' AND data_type = 'text') THEN
+  --   -- Drop policies that depend on status column
+  --   DROP POLICY IF EXISTS "Public can read open dockets" ON dockets;
+  --   DROP POLICY IF EXISTS "Agencies can manage own dockets" ON dockets;
+  --   
+  --   -- First drop the default if it exists
+  --   ALTER TABLE dockets ALTER COLUMN status DROP DEFAULT;
+  --   -- Convert to enum
+  --   ALTER TABLE dockets ALTER COLUMN status TYPE docket_status USING status::docket_status;
+  --   -- Add default back
+  --   ALTER TABLE dockets ALTER COLUMN status SET DEFAULT 'draft';
+  -- END IF;
 END $$;
 
 -- Create docket_tags join table (many-to-many)
@@ -141,10 +150,21 @@ BEGIN
     ALTER TABLE comments ADD COLUMN body text;
   END IF;
   
-  -- Update status column to use enum if it's still text
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'comments' AND column_name = 'status' AND data_type = 'text') THEN
-    ALTER TABLE comments ALTER COLUMN status TYPE comment_status USING status::comment_status;
-  END IF;
+  -- Status enum conversion will be handled in later migration
+  -- IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'comments' AND column_name = 'status' AND data_type = 'text') THEN
+  --   -- Drop policies that depend on status column
+  --   DROP POLICY IF EXISTS "Public can read approved comments" ON comments;
+  --   DROP POLICY IF EXISTS "Agencies can manage own comments" ON comments;
+  --   DROP POLICY IF EXISTS "Users can create comments on open dockets" ON comments;
+  --   DROP POLICY IF EXISTS "Agency reviewers+ can update comment status" ON comments;
+  --   
+  --   -- First drop the default if it exists
+  --   ALTER TABLE comments ALTER COLUMN status DROP DEFAULT;
+  --   -- Convert to enum
+  --   ALTER TABLE comments ALTER COLUMN status TYPE comment_status USING status::comment_status;
+  --   -- Add default back
+  --   ALTER TABLE comments ALTER COLUMN status SET DEFAULT 'pending';
+  -- END IF;
 END $$;
 
 -- Create attachments table
@@ -206,6 +226,7 @@ ALTER TABLE moderation_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agency_settings ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for agencies
+DROP POLICY IF EXISTS "Users can read agencies they belong to" ON agencies;
 CREATE POLICY "Users can read agencies they belong to" ON agencies
   FOR SELECT TO authenticated
   USING (
@@ -216,6 +237,7 @@ CREATE POLICY "Users can read agencies they belong to" ON agencies
     )
   );
 
+DROP POLICY IF EXISTS "Agency owners and admins can update agency" ON agencies;
 CREATE POLICY "Agency owners and admins can update agency" ON agencies
   FOR UPDATE TO authenticated
   USING (
@@ -228,6 +250,7 @@ CREATE POLICY "Agency owners and admins can update agency" ON agencies
   );
 
 -- RLS Policies for agency_users
+DROP POLICY IF EXISTS "Users can read agency members for their agencies" ON agency_users;
 CREATE POLICY "Users can read agency members for their agencies" ON agency_users
   FOR SELECT TO authenticated
   USING (
@@ -238,6 +261,7 @@ CREATE POLICY "Users can read agency members for their agencies" ON agency_users
     )
   );
 
+DROP POLICY IF EXISTS "Agency owners and admins can manage members" ON agency_users;
 CREATE POLICY "Agency owners and admins can manage members" ON agency_users
   FOR ALL TO authenticated
   USING (
@@ -250,11 +274,13 @@ CREATE POLICY "Agency owners and admins can manage members" ON agency_users
   );
 
 -- RLS Policies for tags (readable by all authenticated users)
+DROP POLICY IF EXISTS "Anyone can read tags" ON tags;
 CREATE POLICY "Anyone can read tags" ON tags
   FOR SELECT TO authenticated
   USING (true);
 
 -- RLS Policies for docket_tags
+DROP POLICY IF EXISTS "Users can read docket tags for accessible dockets" ON docket_tags;
 CREATE POLICY "Users can read docket tags for accessible dockets" ON docket_tags
   FOR SELECT TO authenticated
   USING (
@@ -267,6 +293,7 @@ CREATE POLICY "Users can read docket tags for accessible dockets" ON docket_tags
   );
 
 -- RLS Policies for attachments
+DROP POLICY IF EXISTS "Users can read attachments for accessible comments" ON attachments;
 CREATE POLICY "Users can read attachments for accessible comments" ON attachments
   FOR SELECT TO authenticated
   USING (
@@ -280,6 +307,7 @@ CREATE POLICY "Users can read attachments for accessible comments" ON attachment
   );
 
 -- RLS Policies for moderation_logs
+DROP POLICY IF EXISTS "Agency members can read moderation logs for their dockets" ON moderation_logs;
 CREATE POLICY "Agency members can read moderation logs for their dockets" ON moderation_logs
   FOR SELECT TO authenticated
   USING (
@@ -292,6 +320,7 @@ CREATE POLICY "Agency members can read moderation logs for their dockets" ON mod
     )
   );
 
+DROP POLICY IF EXISTS "Agency reviewers+ can create moderation logs" ON moderation_logs;
 CREATE POLICY "Agency reviewers+ can create moderation logs" ON moderation_logs
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -307,6 +336,7 @@ CREATE POLICY "Agency reviewers+ can create moderation logs" ON moderation_logs
   );
 
 -- RLS Policies for agency_settings
+DROP POLICY IF EXISTS "Agency members can read settings" ON agency_settings;
 CREATE POLICY "Agency members can read settings" ON agency_settings
   FOR SELECT TO authenticated
   USING (
@@ -317,6 +347,7 @@ CREATE POLICY "Agency members can read settings" ON agency_settings
     )
   );
 
+DROP POLICY IF EXISTS "Agency admins+ can update settings" ON agency_settings;
 CREATE POLICY "Agency admins+ can update settings" ON agency_settings
   FOR ALL TO authenticated
   USING (
@@ -337,8 +368,11 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_agencies_updated_at ON agencies;
 CREATE TRIGGER update_agencies_updated_at BEFORE UPDATE ON agencies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_agency_users_updated_at ON agency_users;
 CREATE TRIGGER update_agency_users_updated_at BEFORE UPDATE ON agency_users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_agency_settings_updated_at ON agency_settings;
 CREATE TRIGGER update_agency_settings_updated_at BEFORE UPDATE ON agency_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Helper function to get user's role in an agency
@@ -388,3 +422,61 @@ BEGIN
   RETURN role_hierarchy >= required_hierarchy;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Recreate policies after enum conversion
+DROP POLICY IF EXISTS "Public can read approved comments" ON comments;
+CREATE POLICY "Public can read approved comments"
+  ON comments
+  FOR SELECT
+  TO anon, authenticated
+  USING (
+    status = 'approved' AND
+    EXISTS (
+      SELECT 1 FROM dockets 
+      WHERE dockets.id = comments.docket_id 
+      AND dockets.status = 'open'
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can create comments on open dockets" ON comments;
+CREATE POLICY "Users can create comments on open dockets"
+  ON comments
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM dockets 
+      WHERE dockets.id = comments.docket_id 
+      AND dockets.status = 'open'
+      AND (dockets.close_at IS NULL OR dockets.close_at > now())
+    )
+    AND auth.uid() = user_id
+  );
+
+DROP POLICY IF EXISTS "Agency reviewers+ can update comment status" ON comments;
+CREATE POLICY "Agency reviewers+ can update comment status"
+  ON comments
+  FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM dockets d
+      JOIN agency_users am ON am.agency_id = d.agency_id
+      WHERE d.id = comments.docket_id 
+      AND am.user_id = auth.uid()
+      AND am.role IN ('owner', 'admin', 'manager', 'reviewer')
+    )
+  );
+
+DROP POLICY IF EXISTS "Public can read attachments for open dockets" ON docket_attachments;
+CREATE POLICY "Public can read attachments for open dockets"
+  ON docket_attachments
+  FOR SELECT
+  TO anon, authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM dockets 
+      WHERE dockets.id = docket_attachments.docket_id 
+      AND dockets.status = 'open'
+    )
+  );

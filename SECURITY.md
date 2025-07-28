@@ -2,20 +2,103 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+OpenComments follows semantic versioning. The following versions are currently supported with security updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+We take security vulnerabilities seriously. If you discover a security issue, please follow these steps:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+### 1. **DO NOT** create a public GitHub issue
+- Security vulnerabilities should be reported privately
+- Public disclosure can put users at risk
+
+### 2. **Email us directly**
+Send your report to: [security@opencomments.us](mailto:security@opencomments.us)
+
+### 3. **Include in your report**
+- **Description**: Clear description of the vulnerability
+- **Steps to reproduce**: Detailed steps to reproduce the issue
+- **Impact**: Potential impact of the vulnerability
+- **Suggested fix**: If you have suggestions for fixing the issue
+- **Contact information**: How we can reach you for follow-up questions
+
+### 4. **What to expect**
+- **Initial response**: Within 48 hours
+- **Status updates**: Regular updates on our progress
+- **Timeline**: We aim to address critical issues within 7 days
+- **Credit**: We'll credit you in our security advisories (if desired)
+
+### 5. **Responsible disclosure**
+- We ask for 90 days before public disclosure
+- We'll work with you to coordinate disclosure
+- We'll credit you in our security advisories
+
+## Security Features
+
+### Authentication & Authorization
+- Multi-factor authentication support
+- Role-based access control (RBAC)
+- Session management with secure timeouts
+- Password strength requirements
+
+### Data Protection
+- All data encrypted in transit (TLS 1.3)
+- Data encrypted at rest
+- Row-level security (RLS) in database
+- Regular security audits
+
+### Input Validation
+- Comprehensive input sanitization
+- XSS protection
+- SQL injection prevention
+- File upload security
+
+### Infrastructure
+- SOC 2 Type II compliant hosting
+- Regular security updates
+- DDoS protection
+- Security monitoring and alerting
+
+## Security Best Practices
+
+### For Users
+- Use strong, unique passwords
+- Enable multi-factor authentication when available
+- Keep your browser and devices updated
+- Report suspicious activity immediately
+
+### For Developers
+- Follow secure coding practices
+- Regular security training
+- Code reviews with security focus
+- Automated security testing
+
+## Security Contacts
+
+- **Security Team**: [security@opencomments.us](mailto:security@opencomments.us)
+- **Emergency**: [emergency@opencomments.us](mailto:emergency@opencomments.us)
+- **PGP Key**: Available upon request
+
+## Bug Bounty Program
+
+We currently do not have a formal bug bounty program, but we do appreciate security researchers who responsibly disclose vulnerabilities. We may offer recognition and thanks for significant findings.
+
+## Security Updates
+
+- **Critical**: Released within 24 hours
+- **High**: Released within 7 days  
+- **Medium**: Released within 30 days
+- **Low**: Released in next regular update
+
+## Compliance
+
+OpenComments is designed to meet government security requirements:
+- FedRAMP compliance (in progress)
+- FISMA guidelines
+- OWASP Top 10 protection
+- NIST Cybersecurity Framework alignment

@@ -56,7 +56,7 @@ RETURNS TABLE (
   tags text[],
   attachment_count bigint,
   rank real
-)
+) 
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -105,40 +105,29 @@ BEGIN
     GROUP BY comment_id
   ) att_count ON att_count.comment_id = c.id
   WHERE 
-    -- Only published comments from open dockets
     c.status = 'published'
     AND d.status = 'open'
-    
-    -- Text search
     AND (
       p_query IS NULL 
       OR p_query = '' 
       OR c.search_vector @@ plainto_tsquery('english', p_query)
       OR d.search_vector @@ plainto_tsquery('english', p_query)
     )
-    
-    -- Agency filter
     AND (
       p_agency_name IS NULL 
       OR p_agency_name = ''
       OR a.name ILIKE '%' || p_agency_name || '%'
     )
-    
-    -- State filter
     AND (
       p_state IS NULL 
       OR p_state = ''
       OR a.jurisdiction ILIKE '%' || p_state || '%'
     )
-    
-    -- Tags filter
     AND (
       p_tags IS NULL 
       OR array_length(p_tags, 1) IS NULL
       OR d.tags && p_tags
     )
-    
-    -- Date range filter
     AND (
       p_date_from IS NULL 
       OR c.created_at >= p_date_from
@@ -147,8 +136,6 @@ BEGIN
       p_date_to IS NULL 
       OR c.created_at <= p_date_to + interval '1 day'
     )
-    
-    -- Commenter type filter
     AND (
       p_commenter_type IS NULL 
       OR p_commenter_type = ''
@@ -162,15 +149,12 @@ BEGIN
         p_commenter_type = 'anonymous' AND COALESCE(c.submitter_name, c.commenter_name) IS NULL
       )
     )
-    
-    -- Position filter
     AND (
       p_position IS NULL 
       OR p_position = ''
       OR p_position = 'not_specified'
       OR c.position = p_position
     )
-    
   ORDER BY 
     CASE 
       WHEN p_sort_by = 'newest' THEN c.created_at
@@ -187,7 +171,6 @@ BEGIN
     CASE 
       WHEN p_query IS NOT NULL AND p_query != '' THEN ts_rank(c.search_vector, plainto_tsquery('english', p_query))
     END DESC
-    
   LIMIT p_limit
   OFFSET p_offset;
 END;

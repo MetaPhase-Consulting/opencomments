@@ -9,7 +9,7 @@
     - `docket_attachments` - Supporting documents for dockets
     - `comment_attachments` - Files attached to public comments
     - `moderation_logs` - Audit trail for moderation actions
-    - `docket_tags` - Predefined topic tags for categorization
+    - `tags` - Predefined topic tags for categorization
 
   2. Enums
     - `agency_role` - Five-tier role hierarchy
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS agency_invitations (
 );
 
 -- Predefined tags for docket categorization
-CREATE TABLE IF NOT EXISTS docket_tags (
+CREATE TABLE IF NOT EXISTS tags (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text UNIQUE NOT NULL,
   description text,
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS moderation_logs (
 ALTER TABLE agencies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agency_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agency_invitations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE docket_tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE docket_attachments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comment_attachments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE moderation_logs ENABLE ROW LEVEL SECURITY;
@@ -324,46 +324,49 @@ CREATE POLICY "Agency members can read comments on agency dockets"
     )
   );
 
-CREATE POLICY "Public can read approved comments"
-  ON comments
-  FOR SELECT
-  TO anon, authenticated
-  USING (
-    status = 'published' AND
-    EXISTS (
-      SELECT 1 FROM dockets 
-      WHERE dockets.id = comments.docket_id 
-      AND dockets.status = 'open'
-    )
-  );
+-- Policy will be created in later migration after enum conversion
+-- CREATE POLICY "Public can read approved comments"
+--   ON comments
+--   FOR SELECT
+--   TO anon, authenticated
+--   USING (
+--     status = 'published' AND
+--     EXISTS (
+--       SELECT 1 FROM dockets 
+--       WHERE dockets.id = comments.docket_id 
+--       AND dockets.status = 'open'
+--     )
+--   );
 
-CREATE POLICY "Users can create comments on open dockets"
-  ON comments
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM dockets 
-      WHERE dockets.id = comments.docket_id 
-      AND dockets.status = 'open'
-      AND (dockets.close_at IS NULL OR dockets.close_at > now())
-    )
-    AND auth.uid() = user_id
-  );
+-- Policy will be created in later migration after enum conversion
+-- CREATE POLICY "Users can create comments on open dockets"
+--   ON comments
+--   FOR INSERT
+--   TO authenticated
+--   WITH CHECK (
+--     EXISTS (
+--       SELECT 1 FROM dockets 
+--       WHERE dockets.id = comments.docket_id 
+--       AND dockets.status = 'open'
+--       AND (dockets.close_at IS NULL OR dockets.close_at > now())
+--     )
+--     AND auth.uid() = user_id
+--   );
 
-CREATE POLICY "Agency reviewers+ can update comment status"
-  ON comments
-  FOR UPDATE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM dockets d
-      JOIN agency_members am ON am.agency_id = d.agency_id
-      WHERE d.id = comments.docket_id 
-      AND am.user_id = auth.uid()
-      AND am.role IN ('owner', 'admin', 'manager', 'reviewer')
-    )
-  );
+-- Policy will be created in later migration after enum conversion
+-- CREATE POLICY "Agency reviewers+ can update comment status"
+--   ON comments
+--   FOR UPDATE
+--   TO authenticated
+--   USING (
+--     EXISTS (
+--       SELECT 1 FROM dockets d
+--       JOIN agency_members am ON am.agency_id = d.agency_id
+--       WHERE d.id = comments.docket_id 
+--       AND am.user_id = auth.uid()
+--       AND am.role IN ('owner', 'admin', 'manager', 'reviewer')
+--     )
+--   );
 
 -- RLS Policies for attachments
 CREATE POLICY "Users can read attachments for accessible comments"
@@ -399,17 +402,18 @@ CREATE POLICY "Agency members can read docket attachments"
     )
   );
 
-CREATE POLICY "Public can read attachments for open dockets"
-  ON docket_attachments
-  FOR SELECT
-  TO anon, authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM dockets 
-      WHERE dockets.id = docket_attachments.docket_id 
-      AND dockets.status = 'open'
-    )
-  );
+-- Policy will be created in later migration after enum conversion
+-- CREATE POLICY "Public can read attachments for open dockets"
+--   ON docket_attachments
+--   FOR SELECT
+--   TO anon, authenticated
+--   USING (
+--     EXISTS (
+--       SELECT 1 FROM dockets 
+--       WHERE dockets.id = docket_attachments.docket_id 
+--       AND dockets.status = 'open'
+--     )
+--   );
 
 -- RLS Policies for moderation logs
 CREATE POLICY "Agency members can read moderation logs for their dockets"

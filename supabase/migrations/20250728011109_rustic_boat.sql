@@ -117,10 +117,10 @@ CREATE POLICY "Super owners can manage platform roles"
 -- Function to create new agency (for platform admins)
 CREATE OR REPLACE FUNCTION create_agency_with_owner(
   p_agency_name text,
+  p_owner_email text,
   p_jurisdiction text DEFAULT NULL,
   p_jurisdiction_type text DEFAULT 'city',
   p_description text DEFAULT NULL,
-  p_owner_email text,
   p_owner_name text DEFAULT NULL
 )
 RETURNS uuid AS $$

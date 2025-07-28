@@ -63,7 +63,7 @@ BEGIN
     c.commenter_name,
     c.commenter_organization,
     COALESCE(ci.representation, 'individual') as commenter_type,
-    COALESCE(ci.position, 'unclear') as position,
+    COALESCE(c.position, 'not_specified') as position,
     c.created_at,
     c.docket_id,
     d.title as docket_title,
@@ -98,7 +98,7 @@ BEGIN
     AND (p_date_from IS NULL OR c.created_at >= p_date_from)
     AND (p_date_to IS NULL OR c.created_at <= p_date_to)
     AND (p_commenter_type IS NULL OR COALESCE(ci.representation, 'individual') = p_commenter_type)
-    AND (p_position IS NULL OR COALESCE(ci.position, 'unclear') = p_position)
+    AND (p_position IS NULL OR COALESCE(c.position, 'not_specified') = p_position)
   ORDER BY 
     CASE 
       WHEN p_sort_by = 'newest' THEN c.created_at

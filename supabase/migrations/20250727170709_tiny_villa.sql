@@ -11,8 +11,8 @@
     - Template configuration options
 */
 
--- Insert predefined docket tags
-INSERT INTO docket_tags (name, description, color) VALUES
+-- Insert predefined tags
+INSERT INTO tags (name, description, color) VALUES
   ('Budget', 'Budget proposals and financial planning', '#10B981'),
   ('Transportation', 'Roads, transit, and transportation infrastructure', '#3B82F6'),
   ('Housing', 'Housing policy and development', '#8B5CF6'),
@@ -58,8 +58,8 @@ ON CONFLICT (extension) DO NOTHING;
 ALTER TABLE allowed_file_types ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to reference data
-CREATE POLICY "Anyone can read docket tags"
-  ON docket_tags
+CREATE POLICY "Anyone can read tags"
+  ON tags
   FOR SELECT
   TO anon, authenticated
   USING (true);
@@ -71,6 +71,6 @@ CREATE POLICY "Anyone can read allowed file types"
   USING (is_active = true);
 
 -- Create indexes for reference tables
-CREATE INDEX IF NOT EXISTS idx_docket_tags_name ON docket_tags(name);
+CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
 CREATE INDEX IF NOT EXISTS idx_allowed_file_types_extension ON allowed_file_types(extension);
 CREATE INDEX IF NOT EXISTS idx_allowed_file_types_active ON allowed_file_types(is_active);

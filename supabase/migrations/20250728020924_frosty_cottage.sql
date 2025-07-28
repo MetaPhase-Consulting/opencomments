@@ -32,7 +32,7 @@ RETURNS TABLE (
   commenter_name text,
   commenter_organization text,
   commenter_type text,
-  comment_position text,
+  position text,
   created_at timestamptz,
   docket_id uuid,
   docket_title text,
@@ -58,7 +58,7 @@ BEGIN
     c.commenter_name,
     c.commenter_organization,
     COALESCE(ci.representation, 'individual') as commenter_type,
-    COALESCE(ci.comment_position, 'not_specified') as comment_position,
+    COALESCE(c.position, 'not_specified') as position,
     c.created_at,
     c.docket_id,
     d.title as docket_title,
@@ -93,7 +93,7 @@ BEGIN
     AND (p_date_from IS NULL OR c.created_at >= p_date_from)
     AND (p_date_to IS NULL OR c.created_at <= p_date_to)
     AND (p_commenter_type IS NULL OR COALESCE(ci.representation, 'individual') = p_commenter_type)
-    AND (p_position IS NULL OR COALESCE(ci.comment_position, 'not_specified') = p_position)
+    AND (p_position IS NULL OR COALESCE(c.position, 'not_specified') = p_position)
   ORDER BY 
     CASE 
       WHEN p_sort_by = 'newest' THEN c.created_at
@@ -108,8 +108,7 @@ BEGIN
       WHEN p_sort_by = 'docket' THEN d.title
     END ASC,
     CASE 
-      WHEN p_query IS NOT NULL AND c.search_vector IS NOT NULL THEN 
-        ts_rank(c.search_vector, plainto_tsquery('english', p_query))
+      WHEN p_query IS NOT NULL AND c.search_vector IS NOT NULL THEN ts_rank(c.search_vector, plainto_tsquery('english', p_query))
     END DESC
   LIMIT p_limit
   OFFSET p_offset;
@@ -127,7 +126,7 @@ RETURNS TABLE (
   commenter_type text,
   organization_name text,
   authorization_statement text,
-  comment_position text,
+  position text,
   created_at timestamptz,
   docket_id uuid,
   docket_title text,
@@ -152,7 +151,7 @@ BEGIN
     COALESCE(ci.representation, 'individual') as commenter_type,
     ci.organization_name,
     ci.authorization_statement,
-    COALESCE(ci.comment_position, 'not_specified') as comment_position,
+    COALESCE(c.position, 'not_specified') as position,
     c.created_at,
     c.docket_id,
     d.title as docket_title,

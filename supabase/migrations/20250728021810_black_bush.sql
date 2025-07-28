@@ -151,7 +151,6 @@ CREATE OR REPLACE FUNCTION search_comments(
   p_date_from timestamptz DEFAULT NULL,
   p_date_to timestamptz DEFAULT NULL,
   p_commenter_type text DEFAULT NULL,
-  p_has_attachment boolean DEFAULT NULL,
   p_position text DEFAULT NULL,
   p_sort_by text DEFAULT 'newest',
   p_limit integer DEFAULT 20,
@@ -174,7 +173,7 @@ RETURNS TABLE (
   tags text[],
   attachment_count bigint,
   rank real
-)
+) 
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
@@ -182,15 +181,14 @@ BEGIN
   RETURN QUERY
   SELECT 
     c.id,
-    COALESCE(c.content, c.body, '') as content,
-    LEFT(COALESCE(c.content, c.body, ''), 200) || '...' as snippet,
-    COALESCE(c.commenter_name, c.submitter_name) as commenter_name,
-    COALESCE(c.commenter_organization, c.organization) as commenter_organization,
+    c.content,
     CASE 
-      WHEN c.commenter_name IS NULL AND c.submitter_name IS NULL THEN 'anonymous'
-      WHEN c.commenter_organization IS NOT NULL OR c.organization IS NOT NULL THEN 'organization'
-      ELSE 'individual'
-    END as commenter_type,
+      WHEN length(c.content) > 200 THEN left(c.content, 200) || '...'
+      ELSE c.content
+    END as snippet,
+    c.commenter_name,
+    c.commenter_organization,
+    COALESCE(ci.representation, 'individual') as commenter_type,
     COALESCE(c.position, 'not_specified') as position,
     c.created_at,
     d.id as docket_id,
@@ -198,60 +196,51 @@ BEGIN
     d.slug as docket_slug,
     a.name as agency_name,
     a.jurisdiction as agency_jurisdiction,
-    COALESCE(
-      ARRAY(
-        SELECT t.name 
-        FROM docket_tags dt 
-        JOIN tags t ON t.id = dt.tag_id 
-        WHERE dt.docket_id = d.id
-      ), 
-      ARRAY[]::text[]
-    ) as tags,
-    COALESCE(
-      (SELECT COUNT(*) FROM attachments att WHERE att.comment_id = c.id), 
-      0
-    ) as attachment_count,
+    d.tags,
+    COALESCE(att_count.count, 0) as attachment_count,
     CASE 
-      WHEN p_query IS NOT NULL AND p_query != '' THEN
-        ts_rank(
-          to_tsvector('english', COALESCE(c.content, c.body, '')),
-          plainto_tsquery('english', p_query)
-        )
-      ELSE 0.5
+      WHEN p_query IS NOT NULL THEN 
+        ts_rank(c.search_vector, plainto_tsquery('english', p_query))
+      ELSE 0.0
     END as rank
   FROM comments c
-  JOIN dockets d ON d.id = c.docket_id
-  JOIN agencies a ON a.id = d.agency_id
+  INNER JOIN dockets d ON d.id = c.docket_id
+  INNER JOIN agencies a ON a.id = d.agency_id
+  LEFT JOIN commenter_info ci ON ci.comment_id = c.id
+  LEFT JOIN (
+    SELECT 
+      comment_id, 
+      COUNT(*) as count 
+    FROM comment_attachments 
+    GROUP BY comment_id
+  ) att_count ON att_count.comment_id = c.id
   WHERE 
     c.status = 'published'
-    AND d.status = 'open'
-    AND (p_query IS NULL OR p_query = '' OR 
-         to_tsvector('english', COALESCE(c.content, c.body, '')) @@ plainto_tsquery('english', p_query))
+    AND d.status IN ('open', 'closed')
+    AND (p_query IS NULL OR c.search_vector @@ plainto_tsquery('english', p_query))
     AND (p_agency_name IS NULL OR a.name ILIKE '%' || p_agency_name || '%')
     AND (p_state IS NULL OR a.jurisdiction ILIKE '%' || p_state || '%')
+    AND (p_tags IS NULL OR d.tags && p_tags)
     AND (p_date_from IS NULL OR c.created_at >= p_date_from)
     AND (p_date_to IS NULL OR c.created_at <= p_date_to)
-    AND (p_position IS NULL OR c.position = p_position)
-    AND (p_has_attachment IS NULL OR 
-         (p_has_attachment = true AND EXISTS(SELECT 1 FROM attachments att WHERE att.comment_id = c.id)) OR
-         (p_has_attachment = false AND NOT EXISTS(SELECT 1 FROM attachments att WHERE att.comment_id = c.id)))
+    AND (p_commenter_type IS NULL OR COALESCE(ci.representation, 'individual') = p_commenter_type)
+    AND (p_position IS NULL OR COALESCE(c.position, 'not_specified') = p_position)
   ORDER BY 
     CASE 
       WHEN p_sort_by = 'newest' THEN c.created_at
-      ELSE c.created_at
     END DESC,
     CASE 
       WHEN p_sort_by = 'oldest' THEN c.created_at
-      ELSE NULL
     END ASC,
     CASE 
       WHEN p_sort_by = 'agency' THEN a.name
-      ELSE NULL
     END ASC,
     CASE 
       WHEN p_sort_by = 'docket' THEN d.title
-      ELSE NULL
-    END ASC
+    END ASC,
+    CASE 
+      WHEN p_query IS NOT NULL THEN ts_rank(c.search_vector, plainto_tsquery('english', p_query))
+    END DESC
   LIMIT p_limit
   OFFSET p_offset;
 END;
