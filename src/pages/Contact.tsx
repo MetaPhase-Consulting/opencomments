@@ -246,7 +246,7 @@ const Contact = () => {
                     onChange={(e) => updateFormData('email', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="your.email@example.com"
+                    placeholder="your.email@agency.gov"
                   />
                 </div>
               </div>
@@ -374,27 +374,7 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Alternative Contact Methods */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-blue-50 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Additional Support Options</h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <Mail className="w-5 h-5 text-blue-600 mt-1 mr-3" />
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Email Support</h3>
-                  <p className="text-base text-gray-600">
-                    <a href="mailto:support@opencomments.us" className="text-blue-700 hover:text-blue-800 underline">
-                      support@opencomments.us
-                    </a>
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">Response within 1-2 business days</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+
       </main>
       
       <Footer />

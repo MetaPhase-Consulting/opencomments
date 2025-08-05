@@ -44,7 +44,7 @@ const Footer = () => {
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-300">Follow us:</span>
                 <a
-                  href="https://github.com/brianfunk/opencomments"
+                  href="https://github.com/MetaPhase-Consulting/opencomments"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded p-1"
@@ -219,10 +219,10 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-300">
               <div className="flex items-center mb-4 md:mb-0">
                 <a 
-                  href="https://github.com/brianfunk/opencomments" 
+                  href="https://github.com/MetaPhase-Consulting/opencomments" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
+                  className="flex items-center text-gray-300 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-8 rounded"
                 >
                   <Github className="w-4 h-4 mr-2" />
                   <span>Open Source</span>

@@ -82,7 +82,7 @@ If you have questions, contact the agency directly or visit our help center.
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'OpenComments <notifications@opencomments.us>',
+        from: 'OpenComments <noreply@opencomments.us>', // Update with actual email
         to: [commenter_email],
         subject: emailSubject,
         text: emailBody,

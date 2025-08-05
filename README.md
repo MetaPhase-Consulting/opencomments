@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
-[![CivicTech](https://img.shields.io/badge/Civic-Tech-1f7a8c)](https://github.com/brianfunk/opencomments)
+[![CivicTech](https://img.shields.io/badge/Civic-Tech-1f7a8c)](https://github.com/MetaPhase-Consulting/opencomments)
 [![Built by MetaPhase](https://img.shields.io/badge/Built%20by-MetaPhase-fb641f)](https://metaphase.tech)
 [![LinkedIn](https://img.shields.io/badge/Linked-In-0077b5)](https://www.linkedin.com/company/metaphase-consulting-llc/)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/4775fe17-b688-41cc-9426-917c8a5a94b2/deploy-status?branch=dev)](https://app.netlify.com/projects/opencomments/deploys)
@@ -36,7 +36,7 @@ OpenComments bridges the gap between government agencies and citizens by providi
 ### Setup
 ```bash
 # Clone repository
-git clone https://github.com/brianfunk/opencomments.git
+git clone https://github.com/MetaPhase-Consulting/opencomments.git
 cd opencomments
 
 # Install dependencies
@@ -139,7 +139,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: Check the `docs/` folder for detailed guides
 - **Issues**: Report bugs via GitHub Issues
-- **Email**: [support@opencomments.us](mailto:support@opencomments.us)
+- **Support**: Available through our contact form
 
 ---
 

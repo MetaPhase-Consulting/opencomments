@@ -18,7 +18,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 - Public disclosure can put users at risk
 
 ### 2. **Email us directly**
-Send your report to: [security@opencomments.us](mailto:security@opencomments.us)
+Send your report to: Available through our contact form
 
 ### 3. **Include in your report**
 - **Description**: Clear description of the vulnerability
@@ -80,8 +80,8 @@ Send your report to: [security@opencomments.us](mailto:security@opencomments.us)
 
 ## Security Contacts
 
-- **Security Team**: [security@opencomments.us](mailto:security@opencomments.us)
-- **Emergency**: [emergency@opencomments.us](mailto:emergency@opencomments.us)
+- **Security Team**: Available through our contact form
+- **Emergency**: Available through our contact form
 - **PGP Key**: Available upon request
 
 ## Bug Bounty Program

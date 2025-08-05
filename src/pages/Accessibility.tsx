@@ -87,8 +87,8 @@ const Accessibility = () => {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <p className="text-gray-700 mb-2">
                 <strong>Email:</strong>{' '}
-                <a href="mailto:accessibility@opencomments.us" className="text-blue-700 underline hover:text-blue-800">
-                  accessibility@opencomments.us
+                <a href="/contact" className="text-blue-700 underline hover:text-blue-800">
+Contact Form
                 </a>
               </p>
               <p className="text-gray-700 mb-2">

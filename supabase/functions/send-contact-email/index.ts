@@ -66,8 +66,8 @@ Time: ${new Date().toISOString()}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'OpenComments <notifications@opencomments.us>',
-        to: ['support@opencomments.us'],
+        from: 'OpenComments <noreply@opencomments.us>', // Update with actual email
+to: ['support@opencomments.us'], // This will be updated to actual support email
         reply_to: email,
         subject: emailSubject,
         text: emailBody,

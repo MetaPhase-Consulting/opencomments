@@ -336,7 +336,7 @@ const PlatformAdmin = () => {
                         value={agencyForm.owner_email}
                         onChange={(e) => setAgencyForm(prev => ({ ...prev, owner_email: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="admin@springfield.gov"
+                        placeholder="admin@agency.gov"
                         required
                       />
                       <p className="text-xs text-gray-500 mt-1">Must be a .gov or .edu email address</p>
@@ -524,7 +524,7 @@ const PlatformAdmin = () => {
                           value={superUserForm.email}
                           onChange={(e) => setSuperUserForm(prev => ({ ...prev, email: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="user@metaphase.tech"
+                          placeholder="user@agency.gov"
                           required
                         />
                         <p className="text-xs text-gray-500 mt-1">
