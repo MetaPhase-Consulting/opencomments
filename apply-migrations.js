@@ -2,8 +2,18 @@ import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
 
-const SUPABASE_URL = 'https://oeriotefmokcpjdqdqct.supabase.co'
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lcmlvdGVmbW9rY3BqZHFkcWN0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzU1MDEwMSwiZXhwIjoyMDY5MTI2MTAxfQ.PKKg8Q7F9t-_vZWeTAKYuyTtLdNxtABVbpWKRW2av9A'
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
+
+if (!SUPABASE_URL) {
+  console.error('SUPABASE_URL environment variable is required')
+  process.exit(1)
+}
+
+if (!SUPABASE_SERVICE_KEY) {
+  console.error('SUPABASE_SERVICE_KEY environment variable is required')
+  process.exit(1)
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
