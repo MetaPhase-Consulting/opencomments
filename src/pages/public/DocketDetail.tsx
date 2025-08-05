@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { useDocketDetail } from '../../hooks/usePublicBrowse';
+import { useAuth } from '../../contexts/AuthContext';
 import PublicLayout from '../../components/PublicLayout';
+import Breadcrumb from '../../components/Breadcrumb';
 import { 
   Calendar, 
   MessageSquare, 
@@ -17,199 +19,26 @@ import {
   Building2
 } from 'lucide-react';
 
-interface DocketData {
-  id: string;
-  title: string;
-  description: string;
-  summary?: string;
-  slug: string;
-  status: string;
-  open_at: string;
-  close_at?: string;
-  tags: string[];
-  agency_name: string;
-  agency_jurisdiction?: string;
-  comment_count: number;
-  max_comment_length: number;
-  max_comments_per_user: number;
-  uploads_enabled: boolean;
-  max_files_per_comment: number;
-  allowed_mime_types: string[];
-  max_file_size_mb: number;
-  auto_publish: boolean;
-  require_captcha: boolean;
-}
-
-interface DocketAttachment {
-  id: string;
-  filename: string;
-  file_url: string;
-  file_size: number;
-  mime_type: string;
-}
-
-interface PublicComment {
-  id: string;
-  commenter_name?: string;
-  commenter_organization?: string;
-  content: string;
-  created_at: string;
-  attachment_count: number;
-}
-
 const DocketDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [docket, setDocket] = useState<DocketData | null>(null);
-  const [attachments, setAttachments] = useState<DocketAttachment[]>([]);
-  const [comments, setComments] = useState<PublicComment[]>([]);
+  const { user } = useAuth();
+  const { docket, loading, error, fetchDocket } = useDocketDetail();
   const [activeTab, setActiveTab] = useState<'overview' | 'comments'>('overview');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [commentsPage, setCommentsPage] = useState(1);
-  const [commentsLoading, setCommentsLoading] = useState(false);
-  const [hasMoreComments, setHasMoreComments] = useState(true);
+  const [displayedComments, setDisplayedComments] = useState(10);
 
   useEffect(() => {
     if (slug) {
-      fetchDocketData();
+      fetchDocket(slug);
     }
-  }, [slug]);
+  }, [slug, fetchDocket]);
 
   useEffect(() => {
-    if (activeTab === 'comments' && comments.length === 0) {
-      fetchComments(1);
+    // Check if URL has #comments hash and switch to comments tab
+    if (window.location.hash === '#comments') {
+      setActiveTab('comments');
     }
-  }, [activeTab]);
-
-  const fetchDocketData = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Fetch docket details
-      const { data: docketData, error: docketError } = await supabase
-        .from('dockets')
-        .select(`
-          id,
-          title,
-          description,
-          summary,
-          slug,
-          status,
-          open_at,
-          close_at,
-          tags,
-          max_comment_length,
-          max_comments_per_user,
-          uploads_enabled,
-          max_files_per_comment,
-          allowed_mime_types,
-          max_file_size_mb,
-          auto_publish,
-          require_captcha,
-          agencies!inner (
-            name,
-            jurisdiction
-          )
-        `)
-        .eq('slug', slug)
-        .neq('status', 'draft')
-        .single();
-
-      if (docketError || !docketData) {
-        setError('Docket not found');
-        return;
-      }
-
-      // Get comment count
-      const { count: commentCount } = await supabase
-        .from('public_comment_submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('docket_id', docketData.id)
-        .eq('status', 'approved');
-
-      setDocket({
-        ...docketData,
-        agency_name: docketData.agencies.name,
-        agency_jurisdiction: docketData.agencies.jurisdiction,
-        comment_count: commentCount || 0
-      });
-
-      // Fetch attachments
-      const { data: attachmentData, error: attachmentError } = await supabase
-        .from('docket_attachments')
-        .select('*')
-        .eq('docket_id', docketData.id)
-        .order('created_at', { ascending: true });
-
-      if (!attachmentError) {
-        setAttachments(attachmentData || []);
-      }
-
-    } catch (err) {
-      console.error('Error fetching docket:', err);
-      setError('Failed to load docket information');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchComments = async (page: number) => {
-    if (!docket) return;
-
-    setCommentsLoading(true);
-    const limit = 10;
-    const offset = (page - 1) * limit;
-
-    try {
-      const { data: commentData, error: commentError } = await supabase
-        .from('public_comment_submissions')
-        .select(`
-          id,
-          commenter_name,
-          commenter_organization,
-          content,
-          created_at,
-          public_comment_attachments (count)
-        `)
-        .eq('docket_id', docket.id)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (commentError) {
-        console.error('Error fetching comments:', commentError);
-        return;
-      }
-
-      const formattedComments = commentData?.map(comment => ({
-        id: comment.id,
-        commenter_name: comment.commenter_name,
-        commenter_organization: comment.commenter_organization,
-        content: comment.content,
-        created_at: comment.created_at,
-        attachment_count: comment.public_comment_attachments?.[0]?.count || 0
-      })) || [];
-
-      if (page === 1) {
-        setComments(formattedComments);
-      } else {
-        setComments(prev => [...prev, ...formattedComments]);
-      }
-
-      setHasMoreComments(formattedComments.length === limit);
-      setCommentsPage(page);
-
-    } catch (err) {
-      console.error('Error fetching comments:', err);
-    } finally {
-      setCommentsLoading(false);
-    }
-  };
-
-  const loadMoreComments = () => {
-    fetchComments(commentsPage + 1);
-  };
+  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -220,6 +49,63 @@ const DocketDetail = () => {
       minute: '2-digit'
     });
   };
+
+  const getStateAbbreviation = (stateName: string) => {
+    const stateAbbreviations: Record<string, string> = {
+      'Alabama': 'al',
+      'Alaska': 'ak',
+      'Arizona': 'az',
+      'Arkansas': 'ar',
+      'California': 'ca',
+      'Colorado': 'co',
+      'Connecticut': 'ct',
+      'Delaware': 'de',
+      'Florida': 'fl',
+      'Georgia': 'ga',
+      'Hawaii': 'hi',
+      'Idaho': 'id',
+      'Illinois': 'il',
+      'Indiana': 'in',
+      'Iowa': 'ia',
+      'Kansas': 'ks',
+      'Kentucky': 'ky',
+      'Louisiana': 'la',
+      'Maine': 'me',
+      'Maryland': 'md',
+      'Massachusetts': 'ma',
+      'Michigan': 'mi',
+      'Minnesota': 'mn',
+      'Mississippi': 'ms',
+      'Missouri': 'mo',
+      'Montana': 'mt',
+      'Nebraska': 'ne',
+      'Nevada': 'nv',
+      'New Hampshire': 'nh',
+      'New Jersey': 'nj',
+      'New Mexico': 'nm',
+      'New York': 'ny',
+      'North Carolina': 'nc',
+      'North Dakota': 'nd',
+      'Ohio': 'oh',
+      'Oklahoma': 'ok',
+      'Oregon': 'or',
+      'Pennsylvania': 'pa',
+      'Rhode Island': 'ri',
+      'South Carolina': 'sc',
+      'South Dakota': 'sd',
+      'Tennessee': 'tn',
+      'Texas': 'tx',
+      'Utah': 'ut',
+      'Vermont': 'vt',
+      'Virginia': 'va',
+      'Washington': 'wa',
+      'West Virginia': 'wv',
+      'Wisconsin': 'wi',
+      'Wyoming': 'wy',
+      'District of Columbia': 'dc'
+    }
+    return stateAbbreviations[stateName] || stateName.toLowerCase().replace(/\s+/g, '-')
+  }
 
   const formatFileSize = (bytes: number) => {
     const mb = bytes / (1024 * 1024);
@@ -242,9 +128,34 @@ const DocketDetail = () => {
     return new Date(docket.close_at) > new Date();
   };
 
-  const copyShareUrl = () => {
-    navigator.clipboard.writeText(window.location.href);
-    // TODO: Show toast notification
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // TODO: Show toast notification
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+  };
+
+  const sharePage = async () => {
+    const url = window.location.href;
+    const title = docket?.title || 'Docket Details';
+    
+    if (navigator.share) {
+      // Mobile - use native share
+      try {
+        await navigator.share({
+          title: title,
+          url: url
+        });
+      } catch (err) {
+        // User cancelled or error - fallback to clipboard
+        copyToClipboard(url);
+      }
+    } else {
+      // Desktop - copy to clipboard
+      copyToClipboard(url);
+    }
   };
 
   if (loading) {
@@ -285,6 +196,20 @@ const DocketDetail = () => {
   const daysRemaining = getDaysRemaining();
   const commentingOpen = isCommentingOpen();
 
+  const visibleComments = docket?.comments.slice(0, displayedComments) || [];
+  const hasMoreComments = docket && docket.comments.length > displayedComments;
+
+  const loadMoreComments = () => {
+    setDisplayedComments(prev => prev + 10);
+  };
+
+  const getCommentUrl = () => {
+    if (!user) {
+      return `/login?next=/dockets/${docket?.slug}/comment`;
+    }
+    return `/dockets/${docket?.slug}/comment`;
+  };
+
   return (
     <PublicLayout 
       title={`${docket.title} - OpenComments`}
@@ -292,15 +217,13 @@ const DocketDetail = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link
-            to="/dockets"
-            className="inline-flex items-center text-blue-700 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to All Comment Opportunities
-          </Link>
-        </div>
+        <Breadcrumb 
+          items={[
+            { label: docket.agency_jurisdiction || 'State', href: docket.agency_jurisdiction ? `/state/${getStateAbbreviation(docket.agency_jurisdiction)}` : undefined },
+            { label: docket.agency_name, href: `/agencies/${docket.agency_slug}` },
+            { label: docket.title, current: true }
+          ]}
+        />
 
         {/* Hero Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
@@ -322,7 +245,12 @@ const DocketDetail = () => {
                         : `${daysRemaining} Days Left`
                     : 'Closed'}
                 </span>
-                <span className="text-sm text-gray-600">{docket.agency_name}</span>
+                <Link
+                  to={`/agencies/${docket.agency_slug}`}
+                  className="text-sm text-gray-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                >
+                  {docket.agency_name}
+                </Link>
               </div>
 
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -342,29 +270,21 @@ const DocketDetail = () => {
                 )}
                 <div className="flex items-center">
                   <MessageSquare className="w-4 h-4 mr-1" />
-                  {docket.comment_count} public comments
+                  <button 
+                    onClick={() => setActiveTab('comments')}
+                    className="hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
+                    {docket.comment_count} public comments
+                  </button>
                 </div>
               </div>
-
-              {docket.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {docket.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col space-y-3 lg:w-64">
               {commentingOpen ? (
                 <Link
-                  to={`/dockets/${docket.slug}/comment`}
+                  to={getCommentUrl()}
                   className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   <MessageSquare className="w-5 h-5 mr-2" />
@@ -378,7 +298,7 @@ const DocketDetail = () => {
               )}
 
               <button
-                onClick={copyShareUrl}
+                onClick={sharePage}
                 className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <Share2 className="w-5 h-5 mr-2" />
@@ -437,18 +357,22 @@ const DocketDetail = () => {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
                   <div className="prose max-w-none text-gray-700">
-                    {(docket.summary || docket.description).split('\n').map((paragraph, index) => (
-                      <p key={index} className="mb-4">{paragraph}</p>
-                    ))}
+                    {docket.description ? (
+                      docket.description.split('\n').map((paragraph, index) => (
+                        <p key={index} className="mb-4">{paragraph}</p>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No description provided.</p>
+                    )}
                   </div>
                 </div>
 
                 {/* Supporting Documents */}
-                {attachments.length > 0 && (
+                {docket.attachments.length > 0 && (
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Supporting Documents</h2>
                     <div className="space-y-3">
-                      {attachments.map(attachment => (
+                      {docket.attachments.map(attachment => (
                         <div key={attachment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                           <div className="flex items-center">
                             <FileText className="w-6 h-6 text-gray-400 mr-3" />
@@ -475,43 +399,7 @@ const DocketDetail = () => {
                   </div>
                 )}
 
-                {/* Comment Guidelines */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <h2 className="text-lg font-semibold text-blue-900 mb-3">How to Submit Effective Comments</h2>
-                  <ul className="space-y-2 text-sm text-blue-800">
-                    <li>• Be specific about which aspects of the proposal you support or oppose</li>
-                    <li>• Provide factual information and evidence to support your position</li>
-                    <li>• Share how the proposal would affect you, your family, or your community</li>
-                    <li>• Suggest specific changes or alternatives if you have concerns</li>
-                    <li>• Keep comments respectful and focused on the proposal</li>
-                  </ul>
-                  
-                  <div className="mt-4 pt-4 border-t border-blue-200">
-                    <h3 className="text-sm font-medium text-blue-900 mb-2">Submission Guidelines</h3>
-                    <div className="text-xs text-blue-700 space-y-1">
-                      <p>• Maximum {docket.max_comment_length.toLocaleString()} characters per comment</p>
-                      <p>• Up to {docket.max_comments_per_user} comments per person</p>
-                      {docket.uploads_enabled ? (
-                        <p>• Up to {docket.max_files_per_comment} files, {docket.max_file_size_mb}MB each</p>
-                      ) : (
-                        <p>• File uploads not enabled for this docket</p>
-                      )}
-                      <p>• Account registration required for submission</p>
-                      {docket.require_captcha && <p>• CAPTCHA verification required</p>}
-                    </div>
-                  </div>
-                  
-                  {commentingOpen && (
-                    <div className="mt-4">
-                      <Link
-                        to={`/dockets/${docket.slug}/comment`}
-                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-800 transition-colors"
-                      >
-                        Submit Your Comment
-                      </Link>
-                    </div>
-                  )}
-                </div>
+
               </div>
             )}
 
@@ -524,7 +412,7 @@ const DocketDetail = () => {
                   </h2>
                   {commentingOpen && (
                     <Link
-                      to={`/dockets/${docket.slug}/comment`}
+                      to={getCommentUrl()}
                       className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-md hover:bg-blue-800 transition-colors"
                     >
                       <MessageSquare className="w-4 h-4 mr-2" />
@@ -533,7 +421,7 @@ const DocketDetail = () => {
                   )}
                 </div>
 
-                {comments.length === 0 && !commentsLoading ? (
+                {docket.comments.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No public comments yet</h3>
@@ -542,7 +430,7 @@ const DocketDetail = () => {
                     </p>
                     {commentingOpen && (
                       <Link
-                        to={`/dockets/${docket.slug}/comment`}
+                        to={getCommentUrl()}
                         className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors"
                       >
                         Submit First Comment
@@ -551,7 +439,7 @@ const DocketDetail = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {comments.map(comment => (
+                    {visibleComments.map(comment => (
                       <div key={comment.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center space-x-3">
@@ -581,10 +469,14 @@ const DocketDetail = () => {
                             )}
                           </div>
                         </div>
-                        <div className="prose max-w-none text-gray-700">
-                          {comment.content.split('\n').map((paragraph, index) => (
-                            <p key={index} className="mb-2">{paragraph}</p>
-                          ))}
+                        <div className="text-gray-700">
+                          <p className="mb-3 line-clamp-4">{comment.content}</p>
+                          <Link
+                            to={`/comments/${comment.id}`}
+                            className="text-sm font-medium text-blue-700 hover:text-blue-800 underline"
+                          >
+                            View Full Comment
+                          </Link>
                         </div>
                       </div>
                     ))}
@@ -594,17 +486,9 @@ const DocketDetail = () => {
                       <div className="text-center">
                         <button
                           onClick={loadMoreComments}
-                          disabled={commentsLoading}
-                          className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="inline-flex items-center px-6 py-3 text-base font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors"
                         >
-                          {commentsLoading ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
-                              Loading...
-                            </>
-                          ) : (
-                            'Load More Comments'
-                          )}
+                          Load More Comments
                         </button>
                       </div>
                     )}
@@ -625,7 +509,7 @@ const DocketDetail = () => {
               Share your thoughts and help shape this proposal. Public comments are an important part of the democratic process.
             </p>
             <Link
-              to={`/dockets/${docket.slug}/comment`}
+              to={getCommentUrl()}
               className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <MessageSquare className="w-5 h-5 mr-2" />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AgencyProvider } from './contexts/AgencyContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -31,10 +31,23 @@ import GlobalSearch from './pages/agency/GlobalSearch';
 import Reports from './pages/agency/Reports';
 import Unauthorized from './pages/Unauthorized';
 import Contact from './pages/Contact';
+import PlatformAdmin from './pages/platform/PlatformAdmin';
 import DocketBrowse from './pages/public/DocketBrowse';
 import PublicDocketDetail from './pages/public/DocketDetail';
 import CommentWizard from './pages/public/CommentWizard';
 import ThankYou from './pages/public/ThankYou';
+import SearchResults from './pages/SearchResults';
+import CommentSearch from './pages/public/CommentSearch';
+import CommentDetail from './pages/public/CommentDetail';
+import AgencyProfile from './pages/public/AgencyProfile';
+import StatePage from './pages/public/StatePage';
+import Security from './pages/Security';
+import About from './pages/About';
+import Onboarding from './pages/Onboarding';
+import FAQs from './pages/FAQs';
+import UserGuide from './pages/UserGuide';
+import DataAccess from './pages/DataAccess';
+import Status from './pages/Status';
 
 function App() {
   return (
@@ -59,10 +72,26 @@ function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/accessibility" element={<Accessibility />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/security" element={<Security />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/join-onboard" element={<Onboarding />} />
+            <Route path="/new-onboarding" element={<Onboarding />} />
+            <Route path="/faqs" element={<FAQs />} />
+            <Route path="/user-admin-guide" element={<UserGuide />} />
+            <Route path="/user-guide" element={<UserGuide />} />
+            <Route path="/government-user-guide" element={<UserGuide />} />
+            <Route path="/data-access" element={<DataAccess />} />
+            <Route path="/status" element={<Status />} />
             <Route path="/dockets" element={<DocketBrowse />} />
             <Route path="/dockets/:slug" element={<PublicDocketDetail />} />
+            <Route path="/state/:stateCode" element={<StatePage />} />
+            <Route path="/agencies/:slug" element={<AgencyProfile />} />
             <Route path="/dockets/:slug/comment" element={<CommentWizard />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/comments/search" element={<CommentSearch />} />
+            <Route path="/comments/:id" element={<CommentDetail />} />
+            <Route path="/search" element={<Navigate to="/comments/search" replace />} />
             <Route path="/login" element={<PublicLogin />} />
             <Route path="/agency-login" element={<AgencyLogin />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
@@ -81,6 +110,7 @@ function App() {
             <Route path="/agency/login" element={<AgencyLoginNew />} />
             <Route path="/agency/select" element={<AgencySelect />} />
             <Route path="/agency/no-access" element={<AgencyNoAccess />} />
+            <Route path="/agency" element={<Navigate to="/agency/login" replace />} />
             <Route path="/agency/dashboard" element={
               <AgencyProtectedRoute>
                 <AgencyDashboardNew />
@@ -157,6 +187,9 @@ function App() {
                 <AgencySettings />
               </AgencyProtectedRoute>
             } />
+            
+            {/* Platform Admin Routes */}
+            <Route path="/platform-admin" element={<PlatformAdmin />} />
           </Routes>
         </Router>
       </AgencyProvider>

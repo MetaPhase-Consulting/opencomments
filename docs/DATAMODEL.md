@@ -26,9 +26,11 @@ updated_at      timestamptz DEFAULT now()
 ```sql
 id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
 name            text NOT NULL
+slug            text UNIQUE
 jurisdiction    text
 description     text
 logo_url        text
+contact_email   text
 settings        jsonb DEFAULT '{}'
 created_at      timestamptz DEFAULT now()
 updated_at      timestamptz DEFAULT now()
@@ -47,6 +49,65 @@ created_at      timestamptz DEFAULT now()
 updated_at      timestamptz DEFAULT now()
 ```
 *Many-to-many relationship between users and agencies with roles*
+
+## 🔧 Platform Administration
+
+### Platform Roles
+
+**platform_roles**
+```sql
+user_id         uuid PRIMARY KEY (references profiles)
+role            text CHECK (role IN ('super_owner', 'super_user'))
+created_at      timestamptz DEFAULT now()
+created_by      uuid REFERENCES profiles(id)
+updated_at      timestamptz DEFAULT now()
+updated_by      uuid REFERENCES profiles(id)
+```
+*Platform-level administrative roles for system management*
+
+### Platform Role Definitions
+
+**Super Owner**
+- Full access to all agency data, users, roles, and comments
+- Can change any role (including agency Owner)
+- Can create new agencies and invite first user
+- Can invite and remove Super Users
+- Can impersonate agency users (optional)
+- Restricted to approved email domains (@metaphaseconsulting.com, @metaphase.tech, @opencomments.us)
+
+**Super User**
+- Can create new agencies
+- Can invite first Owner to a new agency
+- Can invite additional users to existing agencies (except cannot assign/change Owner)
+- Cannot see agency content (dockets, comments, settings)
+- Restricted to approved email domains (@metaphaseconsulting.com, @metaphase.tech, @opencomments.us)
+
+### Platform Functions
+
+**create_agency_with_owner()**
+- Creates new agency with initial owner
+- Validates government email domains (.gov, .edu)
+- Generates unique public slug
+- Sets up initial agency member relationship
+
+**platform_invite_user_to_agency()**
+- Invites users to existing agencies
+- Creates user profile if doesn't exist
+- Enforces role restrictions (Super Users cannot assign Owner role)
+- Sets up agency membership
+
+### Security Model
+
+**Domain Restrictions**
+- Platform roles restricted to approved domains only
+- Government agencies must use .gov or .edu domains
+- Email domain validation enforced at database level
+
+**Access Control**
+- Row Level Security (RLS) enforces platform role permissions
+- Super Owners can access all agency data
+- Super Users limited to agency creation and user invitation
+- Platform role checks integrated throughout application
 
 ### Comment System
 
@@ -70,6 +131,7 @@ require_captcha     boolean DEFAULT true
 max_file_size_mb    integer DEFAULT 10
 allowed_file_types  text[] DEFAULT ARRAY['pdf','docx','jpg','png']
 search_vector       tsvector
+created_by          uuid REFERENCES profiles(id)
 created_at          timestamptz DEFAULT now()
 updated_at          timestamptz DEFAULT now()
 ```
@@ -85,6 +147,10 @@ status                  comment_status DEFAULT 'submitted'
 commenter_name          text
 commenter_email         text
 commenter_organization  text
+submitter_name          text
+organization            text
+position                text CHECK (position IN ('support', 'oppose', 'neutral', 'unclear', 'not_specified'))
+body                    text
 oauth_provider          text
 oauth_uid               text
 geo_country             text
@@ -138,6 +204,37 @@ created_at      timestamptz DEFAULT now()
 ```
 *Files uploaded with comments*
 
+**tags**
+```sql
+id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
+name            text UNIQUE NOT NULL
+description     text
+color           text DEFAULT '#3B82F6'
+created_at      timestamptz DEFAULT now()
+```
+*Topic tags for categorizing dockets*
+
+**docket_tags**
+```sql
+id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
+docket_id       uuid REFERENCES dockets(id) ON DELETE CASCADE
+tag_id          uuid REFERENCES tags(id) ON DELETE CASCADE
+created_at      timestamptz DEFAULT now()
+```
+*Many-to-many relationship between dockets and tags*
+
+**attachments**
+```sql
+id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
+comment_id      uuid REFERENCES comments(id) ON DELETE CASCADE
+filename        text NOT NULL
+file_url        text NOT NULL
+mime_type       text NOT NULL
+file_size       bigint NOT NULL
+created_at      timestamptz DEFAULT now()
+```
+*File attachments for comments*
+
 **docket_attachments**
 ```sql
 id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
@@ -169,9 +266,11 @@ agencies ──┬── agency_members ──── profiles
 - Agency → Dockets (one agency has many dockets)
 - Docket → Comments (one docket has many comments)
 - Comment → Attachments (one comment has many attachments)
+- Tag → Docket Tags (one tag used in many dockets)
 
 **Many-to-Many**
 - Users ↔ Agencies (via agency_members with roles)
+- Dockets ↔ Tags (via docket_tags junction table)
 
 **Self-Referencing**
 - agency_members.invited_by → profiles.id
@@ -278,12 +377,21 @@ CREATE TYPE docket_status AS ENUM (
 -- GIN indexes for full-text search
 CREATE INDEX idx_dockets_search_vector ON dockets USING gin(search_vector);
 CREATE INDEX idx_comments_search_vector ON comments USING gin(search_vector);
+CREATE INDEX idx_dockets_title_search ON dockets USING gin(to_tsvector('english', title));
+CREATE INDEX idx_dockets_summary_search ON dockets USING gin(to_tsvector('english', COALESCE(summary, '')));
+CREATE INDEX idx_comments_body_search ON comments USING gin(to_tsvector('english', COALESCE(body, '')));
+CREATE INDEX idx_agencies_name_search ON agencies USING gin(to_tsvector('english', name));
 
 -- Performance indexes
 CREATE INDEX idx_comments_docket_id ON comments(docket_id);
 CREATE INDEX idx_comments_status ON comments(status);
+CREATE INDEX idx_comments_position ON comments(position);
 CREATE INDEX idx_dockets_agency_id ON dockets(agency_id);
 CREATE INDEX idx_dockets_status ON dockets(status);
+CREATE INDEX idx_dockets_slug ON dockets(slug);
+CREATE INDEX idx_agencies_slug ON agencies(slug);
+CREATE INDEX idx_docket_tags_docket_id ON docket_tags(docket_id);
+CREATE INDEX idx_attachments_comment_id ON attachments(comment_id);
 ```
 
 ### Search Functions
@@ -296,6 +404,7 @@ BEGIN
   NEW.search_vector := 
     setweight(to_tsvector('english', COALESCE(NEW.title, '')), 'A') ||
     setweight(to_tsvector('english', COALESCE(NEW.description, '')), 'B') ||
+    setweight(to_tsvector('english', COALESCE(NEW.summary, '')), 'B') ||
     setweight(to_tsvector('english', array_to_string(NEW.tags, ' ')), 'C');
   RETURN NEW;
 END;

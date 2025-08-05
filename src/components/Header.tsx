@@ -1,8 +1,10 @@
 import React from 'react';
-import { Search, MessageSquare, ChevronDown } from 'lucide-react';
+import { Search, MessageSquare, ChevronDown, FolderOpen, Flag } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { hasPlatformPermission } from '../types/platform';
 
 const Header = () => {
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const { platformRole } = useAuth();
   const [selectedState, setSelectedState] = React.useState('');
   const [showStateDropdown, setShowStateDropdown] = React.useState(false);
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
@@ -15,6 +17,7 @@ const Header = () => {
     { code: 'CA', name: 'California' },
     { code: 'CO', name: 'Colorado' },
     { code: 'CT', name: 'Connecticut' },
+    { code: 'DC', name: 'District of Columbia' },
     { code: 'DE', name: 'Delaware' },
     { code: 'FL', name: 'Florida' },
     { code: 'GA', name: 'Georgia' },
@@ -57,21 +60,13 @@ const Header = () => {
     { code: 'WA', name: 'Washington' },
     { code: 'WV', name: 'West Virginia' },
     { code: 'WI', name: 'Wisconsin' },
-    { code: 'WY', name: 'Wyoming' },
-    { code: 'DC', name: 'District of Columbia' }
+    { code: 'WY', name: 'Wyoming' }
   ];
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
-    }
-  };
 
   const handleStateSelect = (stateCode: string) => {
     setSelectedState(stateCode);
     setShowStateDropdown(false);
-    window.location.href = `https://${stateCode.toLowerCase()}.opencomments.us`;
+    window.location.href = `/state/${stateCode.toLowerCase()}`;
   };
 
   return (
@@ -82,33 +77,31 @@ const Header = () => {
           <div className="flex items-center justify-between h-full">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold">
+              <a href="/" className="text-xl font-bold hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded">
                 <span style={{ color: '#D9253A' }}>Open</span>
                 <span style={{ color: '#0050D8' }}>Comments</span>
-              </h1>
+              </a>
             </div>
 
             {/* Center Navigation */}
             <nav className="hidden md:flex items-center space-x-6" aria-label="Main navigation">
-              {/* Search Bar */}
-              <form onSubmit={handleSearch} className="relative">
-                <div className="relative">
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-32 pl-3 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    placeholder="Search"
-                    aria-label="Search dockets"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                  >
-                    <Search className="h-4 w-4 text-gray-400 hover:text-blue-700" />
-                  </button>
-                </div>
-              </form>
+              {/* Search Comments Link */}
+              <a
+                href="/comments/search"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Search Comments
+              </a>
+
+              {/* Browse Dockets Link */}
+              <a
+                href="/dockets"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+              >
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Browse Dockets
+              </a>
 
               {/* State Dropdown */}
               <div className="relative">
@@ -116,7 +109,7 @@ const Header = () => {
                   onClick={() => setShowStateDropdown(!showStateDropdown)}
                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
                 >
-                  <MessageSquare className="w-4 h-4 mr-2" />
+                  <Flag className="w-4 h-4 mr-2" />
                   {selectedState ? states.find(s => s.code === selectedState)?.name : 'Select State'}
                   <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${showStateDropdown ? 'rotate-180' : ''}`} />
                 </button>
@@ -139,6 +132,17 @@ const Header = () => {
 
             {/* Right Navigation */}
             <div className="hidden md:flex items-center space-x-4">
+              {/* Platform Admin Link */}
+              {platformRole && hasPlatformPermission(platformRole, 'access_platform_admin') && (
+                <a
+                  href="/platform-admin"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-300 rounded-md hover:bg-purple-100 transition-colors"
+                >
+                  <span className="mr-2">🔧</span>
+                  Platform Admin
+                </a>
+              )}
+              
               <a
                 href="/agency/login"
                 className="px-4 py-2 text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
@@ -192,22 +196,23 @@ const Header = () => {
         {showMobileMenu && (
           <div className="md:hidden absolute left-0 right-0 border-t border-gray-200 bg-blue-100 z-50" style={{ backgroundColor: '#DBEAFE' }}>
             <div className="px-4 py-4 space-y-4">
-              {/* Mobile Search */}
-              <form onSubmit={handleSearch}>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    placeholder="Search dockets..."
-                    aria-label="Search dockets"
-                  />
-                </div>
-              </form>
+              {/* Mobile Navigation Links */}
+              <div className="space-y-3">
+                <a
+                  href="/comments/search"
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors duration-200"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Search Comments
+                </a>
+                <a
+                  href="/dockets"
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors duration-200"
+                >
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Browse Dockets
+                </a>
+              </div>
 
               {/* Mobile State Selection */}
               <div>
@@ -231,6 +236,16 @@ const Header = () => {
 
               {/* Mobile Auth Links */}
               <div className="pt-4 border-t border-gray-200 space-y-2">
+                {/* Platform Admin Link for Mobile */}
+                {platformRole && hasPlatformPermission(platformRole, 'access_platform_admin') && (
+                  <a
+                    href="/platform-admin"
+                    className="block w-full px-4 py-2 text-center text-sm font-medium text-purple-700 bg-purple-50 border border-purple-300 rounded hover:bg-purple-100 transition-colors"
+                  >
+                    🔧 Platform Admin
+                  </a>
+                )}
+                
                 <a
                   href="/agency/login"
                   className="block w-full px-4 py-2 text-center text-sm font-medium border-2 rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-red-600 hover:text-white"
