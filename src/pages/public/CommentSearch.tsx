@@ -654,52 +654,52 @@ const CommentSearch = () => {
                     </select>
                   </div>
                 </div>
+                
+                {/* Active Filter Chips */}
+                {hasActiveFilters() && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-gray-900">Active Filters</h3>
+                      <button
+                        onClick={clearFilters}
+                        className="text-sm text-blue-700 hover:text-blue-800"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {filters.query && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                          Search: "{filters.query}"
+                          <button
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, query: '' }))
+                              setSearchParams(new URLSearchParams())
+                            }}
+                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {getActiveFilterChips().map(chip => (
+                        <span key={chip.key} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                          {chip.label}: {chip.value}
+                          <button
+                            onClick={chip.onRemove}
+                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </form>
         </div>
-        
-        {/* Active Filter Chips */}
-        {hasActiveFilters() && (
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-900">Active Filters</h3>
-              <button
-                onClick={clearFilters}
-                className="text-sm text-blue-700 hover:text-blue-800"
-              >
-                Clear all
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {filters.query && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                  Search: "{filters.query}"
-                  <button
-                    onClick={() => {
-                      setFilters(prev => ({ ...prev, query: '' }))
-                      setSearchParams(new URLSearchParams())
-                    }}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-              {getActiveFilterChips().map(chip => (
-                <span key={chip.key} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                  {chip.label}: {chip.value}
-                  <button
-                    onClick={chip.onRemove}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 focus:outline-none"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Results */}
         {error && (
