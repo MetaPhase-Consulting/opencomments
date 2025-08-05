@@ -209,7 +209,7 @@ const About = () => {
               </div>
               <div className="mt-4">
                 <a 
-                  href="https://github.com/brianfunk/opencomments" 
+                  href="https://github.com/MetaPhase-Consulting/opencomments" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-green-800 hover:text-green-900 underline"

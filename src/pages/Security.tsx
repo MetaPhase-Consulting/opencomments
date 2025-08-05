@@ -177,7 +177,7 @@ const Security = () => {
                 <strong>Security vulnerabilities should be reported immediately.</strong>
               </p>
               <div className="space-y-2 text-red-700">
-                <p><strong>Email:</strong> <a href="mailto:security@opencomments.us" className="underline">security@opencomments.us</a></p>
+                <p><strong>Security:</strong> Available through our contact form</p>
                 <p><strong>Response Time:</strong> We respond to security reports within 24 hours</p>
                 <p><strong>Responsible Disclosure:</strong> We work with researchers to address issues before public disclosure</p>
               </div>

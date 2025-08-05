@@ -98,7 +98,7 @@ const AgencyNoAccess = () => {
             <p className="text-sm text-gray-500">
               Need help? Contact your agency administrator or{' '}
               <a 
-                href="mailto:support@opencomments.us" 
+                href="/contact" 
                 className="text-blue-700 hover:text-blue-800 underline"
               >
                 technical support

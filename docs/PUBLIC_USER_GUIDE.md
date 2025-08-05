@@ -275,7 +275,7 @@ A: Use the "Forgot Password" link for email accounts, or simply sign in with a d
    - Find contact information for specific agencies
 
 2. **Technical Support**
-   - Email: [support@opencomments.us](mailto:support@opencomments.us)
+   - Support: Available through our contact form
    - Response time: 1-2 business days
    - Include details about any error messages
 
@@ -290,7 +290,7 @@ A: Use the "Forgot Password" link for email accounts, or simply sign in with a d
 - Large print versions of documents available
 - Screen reader compatible interface
 - Alternative formats available upon request
-- Contact [accessibility@opencomments.us](mailto:accessibility@opencomments.us)
+- Contact us through our contact form
 
 **Technical Requirements**
 - Works with all modern web browsers

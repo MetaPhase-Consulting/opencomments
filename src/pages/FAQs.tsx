@@ -46,7 +46,7 @@ const FAQs = () => {
         {
           id: 'gov-1',
           question: 'How do I get my agency set up on OpenComments?',
-          answer: 'Contact us through our onboarding form or email support@opencomments.us with your agency information. We\'ll verify your government status and set up your agency portal within 1-2 business days. The service is free for eligible government agencies.'
+          answer: 'Contact us through our onboarding form with your agency information. We\'ll verify your government status and set up your agency portal within 1-2 business days. The service is free for eligible government agencies.'
         },
         {
           id: 'gov-2',

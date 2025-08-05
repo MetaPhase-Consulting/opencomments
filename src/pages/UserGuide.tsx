@@ -436,7 +436,7 @@ const UserGuide = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-blue-900 mb-3">Technical Support</h3>
                 <div className="space-y-2 text-blue-800">
-                  <p><strong>Email:</strong> <a href="mailto:support@opencomments.us" className="underline">support@opencomments.us</a></p>
+                  <p><strong>Support:</strong> Available through our contact form</p>
                   <p><strong>Response Time:</strong> 1-2 business days</p>
                   <p><strong>Hours:</strong> Monday-Friday, 9 AM - 5 PM EST</p>
                 </div>

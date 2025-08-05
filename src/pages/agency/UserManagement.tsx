@@ -218,7 +218,7 @@ const UserManagement = () => {
             <button
               onClick={() => {
                 // Open support email or form
-                window.location.href = 'mailto:support@opencomments.us?subject=Access Request'
+                window.location.href = '/contact?subject=Access Request'
               }}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100"
             >

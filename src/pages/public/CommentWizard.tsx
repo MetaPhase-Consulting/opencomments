@@ -509,7 +509,7 @@ const CommentWizard = () => {
                     value={formData.email}
                     onChange={(e) => updateFormData('email', sanitizeInput(e.target.value))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="your.email@example.com"
+                    placeholder="your.email@agency.gov"
                   />
                 </div>
               </div>

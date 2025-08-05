@@ -87,8 +87,8 @@ const Privacy = () => {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Contact Us</h2>
             <p className="text-gray-700">
               If you have questions about this Privacy Policy, please contact us at{' '}
-              <a href="mailto:privacy@opencomments.us" className="text-blue-700 underline hover:text-blue-800">
-                privacy@opencomments.us
+              <a href="/contact" className="text-blue-700 underline hover:text-blue-800">
+Contact Form
               </a>
             </p>
           </section>
