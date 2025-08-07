@@ -14,9 +14,9 @@ const validateSupabaseConfig = () => {
     throw new Error('Invalid Supabase URL format')
   }
   
-  // Validate key format (Supabase anon keys start with 'eyJ')
-  if (!key.startsWith('eyJ')) {
-    throw new Error('Invalid Supabase key format')
+  // Validate key format (Supabase keys start with 'eyJ' for legacy or 'sb_' for new format)
+  if (!key.startsWith('eyJ') && !key.startsWith('sb_')) {
+    throw new Error('Invalid Supabase key format - must start with "eyJ" (legacy) or "sb_" (new format)')
   }
   
   return { url, key }
